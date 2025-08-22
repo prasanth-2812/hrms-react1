@@ -33,10 +33,7 @@ const Hero: React.FC = () => {
                 <div className="text-3xl font-bold text-blue-600">30+</div>
                 <div className="text-gray-600">Industries</div>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600">9</div>
-                <div className="text-gray-600">Countries</div>
-              </div>
+             
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600">24/7</div>
                 <div className="text-gray-600">Support</div>

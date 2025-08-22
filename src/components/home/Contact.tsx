@@ -26,7 +26,7 @@ const Contact: React.FC = () => {
                     </svg>
                   ),
                   title: "Phone",
-                  detail: "+91 98765 43210"
+                  detail: "+91 93925 62193"
                 },
                 {
                   icon: (
@@ -45,7 +45,7 @@ const Contact: React.FC = () => {
                     </svg>
                   ),
                   title: "Address",
-                  detail: "Mumbai, Maharashtra, India"
+                  detail: "Sunrise Startup Towers,Madhurawada, IT SEZ,Hill No:3,Visakhapatnam-48, Andhra Pradesh,India"
                 }
               ].map((item, i) => (
                 <div key={i} className="flex items-center space-x-3">
