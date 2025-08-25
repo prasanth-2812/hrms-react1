@@ -1,4 +1,3 @@
-// src/components/layout/Header.tsx
 import { Link, useLocation } from "react-router-dom";
 import React, { useState } from "react";
 import logo from "../../assets/logo.svg";
@@ -51,6 +50,19 @@ const Header: React.FC = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-6">
+            {/* Home */}
+            <Link
+              to="/"
+              className={`text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 relative group ${
+                isActive("/") ? "text-blue-600" : ""
+              }`}
+            >
+              Home
+              <span className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
+                isActive("/") ? "w-full" : "w-0 group-hover:w-full"
+              }`}></span>
+            </Link>
+
             {/* Features Dropdown */}
             <div 
               className="relative group"
@@ -100,22 +112,44 @@ const Header: React.FC = () => {
               )}
             </div>
 
+            {/* About Us */}
+            <Link
+              to="/about-us"
+              className={`text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 relative group ${
+                isActive("/about-us") ? "text-blue-600" : ""
+              }`}
+            >
+              About Us
+              <span className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
+                isActive("/about-us") ? "w-full" : "w-0 group-hover:w-full"
+              }`}></span>
+            </Link>
 
-            {/* Other Nav Items */}
-            {["Services", "About Us", "Pricing", "Contact Us"].map((item) => (
-              <Link
-                key={item}
-                to={`/${item.toLowerCase().replace(" ", "-")}`}
-                className={`text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 relative group ${
-                  isActive(`/${item.toLowerCase().replace(" ", "-")}`) ? "text-blue-600" : ""
-                }`}
-              >
-                {item}
-                <span className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
-                  isActive(`/${item.toLowerCase().replace(" ", "-")}`) ? "w-full" : "w-0 group-hover:w-full"
-                }`}></span>
-              </Link>
-            ))}
+            {/* Pricing */}
+            <Link
+              to="/pricing"
+              className={`text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 relative group ${
+                isActive("/pricing") ? "text-blue-600" : ""
+              }`}
+            >
+              Pricing
+              <span className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
+                isActive("/pricing") ? "w-full" : "w-0 group-hover:w-full"
+              }`}></span>
+            </Link>
+
+            {/* Contact Us */}
+            <Link
+              to="/contact-us"
+              className={`text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 relative group ${
+                isActive("/contact-us") ? "text-blue-600" : ""
+              }`}
+            >
+              Contact Us
+              <span className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
+                isActive("/contact-us") ? "w-full" : "w-0 group-hover:w-full"
+              }`}></span>
+            </Link>
           </nav>
 
           {/* Right Side Buttons */}
@@ -143,33 +177,58 @@ const Header: React.FC = () => {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden bg-white rounded-lg shadow-lg mt-2 py-4 animate-fadeIn border border-gray-100">
-          {["Home", "Features", "Services", "About Us", "Pricing", "Contact Us"].map((item) => (
-              <Link
-                key={item}
-                to={`/${item.toLowerCase().replace(" ", "-")}`}
-                className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200"
+            <Link
+              to="/"
+              className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Home
+            </Link>
+            <Link
+              to="/features"
+              className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Features
+            </Link>
+            <Link
+              to="/about-us"
+              className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              About Us
+            </Link>
+            <Link
+              to="/pricing"
+              className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Pricing
+            </Link>
+            <Link
+              to="/contact-us"
+              className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Contact Us
+            </Link>
+            <div className="px-4 pt-4 space-y-2">
+              <Link 
+                to="/request-demo" 
+                className="w-full sm:w-auto bg-white border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-full font-semibold hover:bg-blue-600 hover:text-white transition-all duration-300 hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 block text-center"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                {item}
+                Request Demo
               </Link>
-            ))}
-          <div className="px-4 pt-4 space-y-2">
-            <Link 
-              to="/request-demo" 
-              className="w-full sm:w-auto bg-white border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-full font-semibold hover:bg-blue-600 hover:text-white transition-all duration-300 hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 block text-center"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Request Demo
-            </Link>
-            <Link 
-              to="/send-enquiry" 
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-full font-semibold hover:shadow-xl transition-all duration-300 block text-center"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Send Enquiry
-            </Link>
+              <Link 
+                to="/send-enquiry" 
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-full font-semibold hover:shadow-xl transition-all duration-300 block text-center"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Send Enquiry
+              </Link>
+            </div>
           </div>
-        </div>
         )}
       </div>
     </header>

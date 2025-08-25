@@ -12,9 +12,9 @@ const Footer = () => {
                 <img 
                   src={require("../../assets/hrmslogo.png")} 
                   alt="SYNC HRMS Logo" 
-                  className="w-20 h-20 object-contain"
+                  className="w-21 h-20 object-contain"
                 />
-                <p className="text-blue-200">By Tanasvi Technologies</p>
+                <p className="text-blue-200 text-lg">By Tanasvi Technologies</p>
               </div>
             </div>
             <p className="text-gray-400 mb-6">
@@ -39,7 +39,7 @@ const Footer = () => {
           </div>
 
           {([
-            ["Company", ["Home", "Features", "Services", "About Us"]],
+            ["Company", ["Home", "Features", "About Us"]],
             ["Resources", ["Help Center", "Documentation"]],
             ["Legal", ["Privacy Policy", "Terms & Conditions", "Security", "Compliance"]],
           ] as [string, string[]][]).map((column, index) => (
