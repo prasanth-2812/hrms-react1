@@ -10,14 +10,7 @@ const Footer = () => {
     });
   };
 
-  const handleNavigation = (path: string) => {
-    // Navigate to the route
-    window.location.hash = path;
-    // Scroll to top after navigation
-    setTimeout(() => {
-      scrollToTop();
-    }, 100);
-  };
+ 
 
   return (
     <footer className="bg-gray-900 text-white py-12">
@@ -97,7 +90,11 @@ const Footer = () => {
 
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex space-x-6 mb-4 md:mb-0">
+           
+            <p className="text-gray-400 text-sm">
+              &copy; 2025 Tanasvi Technologies Pvt. Ltd. All rights reserved.
+            </p>
+             <div className="flex space-x-6 mb-4 md:mb-0">
               <Link to="/privacy" onClick={scrollToTop} className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
                 Privacy Policy
               </Link>
@@ -108,9 +105,6 @@ const Footer = () => {
                 Security
               </Link>
             </div>
-            <p className="text-gray-400 text-sm">
-              &copy; 2025 Tanasvi Technologies Pvt. Ltd. All rights reserved.
-            </p>
           </div>
         </div>
       </div>
