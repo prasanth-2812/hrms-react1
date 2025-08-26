@@ -11,7 +11,7 @@ import Services from "./pages/Services";
 import AboutUs from "./pages/AboutUs";
 import Pricing from "./pages/Pricing";
 import ContactUs from "./pages/ContactUs";
-import Login from "./pages/Login";
+
 import SendEnquiry from "./pages/SendEnquiry";
 import AIPoweredRecruitment from "./pages/features/AIPoweredRecruitment";
 import SmartOnboardingAssistant from "./pages/features/SmartOnboardingAssistant";
@@ -50,7 +50,7 @@ const App = () => {
             <Route path="/about-us" element={<AboutUs />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/contact-us" element={<ContactUs />} />
-            <Route path="/login" element={<Login />} />
+          
             <Route path="/send-enquiry" element={<SendEnquiry />} />
             <Route path="/request-demo" element={<RequestDemo />} />
             <Route path="/features/ai-powered-recruitment" element={<AIPoweredRecruitment />} />

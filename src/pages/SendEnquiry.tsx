@@ -13,6 +13,7 @@ const SendEnquiry = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [captchaCode, setCaptchaCode] = useState("TWPTG4");
   const [captchaError, setCaptchaError] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   // Generate random captcha code
   const generateCaptcha = () => {
@@ -24,6 +25,7 @@ const SendEnquiry = () => {
     setCaptchaCode(result);
     setFormData(prev => ({ ...prev, captcha: "" }));
     setCaptchaError(false);
+    setSubmitError("");
   };
 
   // Format captcha input to uppercase only
@@ -31,13 +33,15 @@ const SendEnquiry = () => {
     const value = e.target.value.toUpperCase();
     setFormData(prev => ({ ...prev, captcha: value }));
     setCaptchaError(false);
+    setSubmitError("");
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setSubmitError("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate captcha
@@ -47,12 +51,35 @@ const SendEnquiry = () => {
     }
 
     setIsSubmitting(true);
+    setSubmitError("");
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Make actual API call to your backend
+      const response = await fetch('http://localhost:5000/api/send-enquiry', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          company: formData.company,
+          message: formData.message
+        }),
+      });
+
+      if (response.ok) {
+        setIsSubmitted(true);
+      } else {
+        const result = await response.json();
+        setSubmitError(result.message || 'Failed to submit form. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setSubmitError('Network error. Please check your connection and try again.');
+    } finally {
       setIsSubmitting(false);
-      setIsSubmitted(true);
-    }, 1500);
+    }
   };
 
   if (isSubmitted) {
@@ -229,6 +256,12 @@ const SendEnquiry = () => {
                     )}
                   </div>
                 </div>
+
+                {submitError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    {submitError}
+                  </div>
+                )}
 
                 <button
                   type="submit"

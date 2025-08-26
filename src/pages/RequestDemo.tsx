@@ -1,4 +1,6 @@
-import { useState } from "react";
+// src/pages/RequestDemo.tsx
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const RequestDemo = () => {
   const [formData, setFormData] = useState({
@@ -13,72 +15,160 @@ const RequestDemo = () => {
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [captchaCode, setCaptchaCode] = useState("TWPTG4");
+  const [captchaCode, setCaptchaCode] = useState(generateCaptcha());
   const [captchaError, setCaptchaError] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Generate random captcha code
-  const generateCaptcha = () => {
+  function generateCaptcha() {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let result = "";
     for (let i = 0; i < 6; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    setCaptchaCode(result);
+    return result;
+  }
+
+  const refreshCaptcha = () => {
+    setCaptchaCode(generateCaptcha());
     setFormData(prev => ({ ...prev, captcha: "" }));
     setCaptchaError(false);
+    setFormErrors(prev => ({ ...prev, captcha: "" }));
   };
 
-  // Format captcha input to uppercase only
   const handleCaptchaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toUpperCase();
     setFormData(prev => ({ ...prev, captcha: value }));
     setCaptchaError(false);
+    setFormErrors(prev => ({ ...prev, captcha: "" }));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = "Full name is required";
+    }
+    
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Email is invalid";
+    }
+    
+    if (!formData.company.trim()) {
+      errors.company = "Company name is required";
+    }
+    
+    if (!formData.employees) {
+      errors.employees = "Please select number of employees";
+    }
+    
+    if (!formData.phone.trim()) {
+      errors.phone = "Phone number is required";
+    }
+    
+    if (formData.captcha !== captchaCode) {
+      errors.captcha = "Invalid captcha";
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate captcha
-    if (formData.captcha !== captchaCode) {
-      setCaptchaError(true);
+    if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await fetch('http://localhost:5000/api/request-demo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          company: formData.company,
+          employees: formData.employees,
+          phone: formData.phone,
+          message: formData.message
+        }),
+      });
+
+      if (response.ok) {
+        setIsSubmitted(true);
+        // Reset form
+        setFormData({
+          name: "",
+          email: "",
+          company: "",
+          employees: "",
+          phone: "",
+          message: "",
+          captcha: "",
+        });
+        refreshCaptcha();
+        
+        // Reset after 5 seconds
+        setTimeout(() => {
+          setIsSubmitted(false);
+        }, 5000);
+      } else {
+        const result = await response.json();
+        setFormErrors({ submit: result.message || 'Failed to submit form' });
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setFormErrors({ submit: 'Network error. Please check your connection and try again.' });
+    } finally {
       setIsSubmitting(false);
-      setIsSubmitted(true);
-    }, 1500);
+    }
   };
+
+  useEffect(() => {
+    // Add smooth scroll behavior
+    document.body.style.overflowY = 'auto';
+  }, []);
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-24">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="bg-white p-12 rounded-2xl shadow-xl border border-blue-100">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Thank You!</h2>
-            <p className="text-xl text-gray-600 mb-6">
-              We've received your request. A member of our team will contact you within 24 hours to schedule your personalized demo.
-            </p>
-            <p className="text-gray-500">
-              <strong>Next Steps:</strong> Check your email for confirmation and calendar invite.
-            </p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white p-8 rounded-2xl shadow-xl border border-blue-100 text-center max-w-md w-full"
+        >
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
           </div>
-        </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Thank You!</h2>
+          <p className="text-gray-600">
+            We've received your demo request. A team member will contact you within 24 hours to schedule your session.
+          </p>
+        </motion.div>
       </div>
     );
   }
@@ -88,7 +178,12 @@ const RequestDemo = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left Side - Hero Info */}
-          <div className="space-y-8">
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="space-y-8"
+          >
             <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
               See <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Synchrm in Action</span>
             </h1>
@@ -103,14 +198,25 @@ const RequestDemo = () => {
                 "Get answers to your specific HR challenges",
                 "Explore customization options for your business"
               ].map((item, i) => (
-                <div key={i} className="flex items-center space-x-3">
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
+                  className="flex items-center space-x-3"
+                >
                   <div className="w-2 h-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"></div>
                   <span className="text-gray-700">{item}</span>
-                </div>
+                </motion.div>
               ))}
             </div>
 
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-2xl text-white">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.7 }}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-2xl text-white"
+            >
               <div className="flex items-center space-x-3 mb-2">
                 <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
                 <span className="font-semibold">Available Today</span>
@@ -118,18 +224,30 @@ const RequestDemo = () => {
               <p className="text-sm opacity-90">
                 Flexible slots: 9 AM – 6 PM (IST) | 30-min or 60-min sessions
               </p>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* Right Side - Form */}
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl transform rotate-6"></div>
+          <motion.div 
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="relative"
+          >
+            {/* Background gradient with rotation */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl transform rotate-6 shadow-2xl"></div>
+            
+            {/* Form container */}
             <div className="relative bg-white p-8 md:p-10 rounded-2xl shadow-2xl">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Request a Demo</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Schedule Your Demo</h2>
               
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid md:grid-cols-2 gap-5">
-                  <div>
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                  >
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                       Full Name *
                     </label>
@@ -140,11 +258,20 @@ const RequestDemo = () => {
                       value={formData.name}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                        formErrors.name ? 'border-red-500' : 'border-gray-300'
+                      }`}
                       placeholder="Enter your full name"
                     />
-                  </div>
-                  <div>
+                    {formErrors.name && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>
+                    )}
+                  </motion.div>
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.6 }}
+                  >
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                       Work Email *
                     </label>
@@ -155,13 +282,22 @@ const RequestDemo = () => {
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                        formErrors.email ? 'border-red-500' : 'border-gray-300'
+                      }`}
                       placeholder="your@company.com"
                     />
-                  </div>
+                    {formErrors.email && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
+                    )}
+                  </motion.div>
                 </div>
 
-                <div>
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.7 }}
+                >
                   <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-1">
                     Company Name *
                   </label>
@@ -172,13 +308,22 @@ const RequestDemo = () => {
                     value={formData.company}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                      formErrors.company ? 'border-red-500' : 'border-gray-300'
+                    }`}
                     placeholder="Your company name"
                   />
-                </div>
+                  {formErrors.company && (
+                    <p className="text-red-500 text-sm mt-1">{formErrors.company}</p>
+                  )}
+                </motion.div>
 
                 <div className="grid md:grid-cols-2 gap-5">
-                  <div>
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.8 }}
+                  >
                     <label htmlFor="employees" className="block text-sm font-medium text-gray-700 mb-1">
                       No. of Employees *
                     </label>
@@ -188,7 +333,9 @@ const RequestDemo = () => {
                       value={formData.employees}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                        formErrors.employees ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     >
                       <option value="">Select range</option>
                       <option value="1-50">1 – 50</option>
@@ -197,8 +344,15 @@ const RequestDemo = () => {
                       <option value="501-1000">501 – 1,000</option>
                       <option value="1000+">1,000+</option>
                     </select>
-                  </div>
-                  <div>
+                    {formErrors.employees && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.employees}</p>
+                    )}
+                  </motion.div>
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.9 }}
+                  >
                     <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                       Phone Number *
                     </label>
@@ -209,13 +363,22 @@ const RequestDemo = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                        formErrors.phone ? 'border-red-500' : 'border-gray-300'
+                      }`}
                       placeholder="+91 XXXXX XXXXX"
                     />
-                  </div>
+                    {formErrors.phone && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.phone}</p>
+                    )}
+                  </motion.div>
                 </div>
 
-                <div>
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 1.0 }}
+                >
                   <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
                     What would you like to see in the demo?
                   </label>
@@ -228,15 +391,20 @@ const RequestDemo = () => {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                     placeholder="e.g., AI recruitment, payroll automation, onboarding..."
                   ></textarea>
-                </div>
+                </motion.div>
 
                 {/* Security Verification Section */}
-                <div className="mt-6">
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 1.1 }}
+                  className="mt-6"
+                >
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-sm font-medium text-gray-700">Security Verification</label>
                     <button
                       type="button"
-                      onClick={generateCaptcha}
+                      onClick={refreshCaptcha}
                       className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
                       aria-label="Refresh captcha"
                     >
@@ -259,31 +427,44 @@ const RequestDemo = () => {
                       onChange={handleCaptchaChange}
                       placeholder="ENTER THE CODE ABOVE"
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                        captchaError ? 'border-red-500' : 'border-gray-300'
+                        formErrors.captcha ? 'border-red-500' : 'border-gray-300'
                       }`}
                       maxLength={6}
                       required
                     />
-                    {captchaError && (
-                      <p className="text-red-500 text-sm mt-1">Invalid code. Please try again.</p>
+                    {formErrors.captcha && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.captcha}</p>
                     )}
                   </div>
-                </div>
+                </motion.div>
 
-                <button
+                {formErrors.submit && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 1.2 }}
+                    className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
+                  >
+                    {formErrors.submit}
+                  </motion.div>
+                )}
+
+                <motion.button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:shadow-xl transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? "Submitting..." : "Schedule My Demo"}
-                </button>
+                  {isSubmitting ? "Scheduling..." : "Schedule My Demo"}
+                </motion.button>
               </form>
             </div>
 
             {/* Floating Decorative Elements */}
             <div className="absolute -top-4 -right-4 w-20 h-20 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-bounce"></div>
             <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-bounce delay-500"></div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

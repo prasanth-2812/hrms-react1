@@ -187,46 +187,7 @@ const AboutUs = () => {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className={`py-24 transition-all duration-1000 delay-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold text-gray-900 mb-16">Meet the Team</h2>
-          <div className="grid md:grid-cols-3 gap-10">
-            {[
-              {
-                name: "Rahul Sharma",
-                role: "CEO & Founder",
-                img: "https://randomuser.me/api/portraits/men/32.jpg",
-                bio: "Former HR tech consultant. Built Synchrm to fix broken HR systems."
-              },
-              {
-                name: "Priya Mehta",
-                role: "CTO",
-                img: "https://randomuser.me/api/portraits/women/44.jpg",
-                bio: "AI & security expert. Led engineering at 2 SaaS startups."
-              },
-              {
-                name: "Amit Patel",
-                role: "Head of Product",
-                img: "https://randomuser.me/api/portraits/men/66.jpg",
-                bio: "Design-driven product leader. Believes HR should be delightful."
-              }
-            ].map((member, i) => (
-              <div key={i} className="group">
-                <img
-                  src={member.img}
-                  alt={member.name}
-                  className="w-32 h-32 rounded-full mx-auto shadow-lg mb-4 group-hover:scale-105 transition-transform duration-300"
-                />
-                <h3 className="text-xl font-bold text-gray-900">{member.name}</h3>
-                <p className="text-blue-600 font-medium">{member.role}</p>
-                <p className="text-gray-600 mt-2 text-sm">{member.bio}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
+     
       {/* CTA Section */}
       <section className={`py-24 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-center transition-all duration-1000 delay-1100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

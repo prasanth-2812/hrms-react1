@@ -13,8 +13,7 @@ const Home = () => {
       <Features />
       <AdvancedFeatures />
       <Benefits />
-      <Pricing />
-      <Contact />
+      
     </>
   );
 };
