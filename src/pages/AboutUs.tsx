@@ -172,8 +172,9 @@ const AboutUs = () => {
           <h2 className="text-4xl font-bold text-gray-900 mb-16">By the Numbers</h2>
           <div className="grid md:grid-cols-4 gap-8">
             {[
+              
               { num: "30+", label: "Industries" },
-              { num: "9", label: "Countries" },
+
               { num: "500+", label: "Happy Clients" },
               { num: "92%", label: "Employee Satisfaction" }
             ].map((stat, i) => (

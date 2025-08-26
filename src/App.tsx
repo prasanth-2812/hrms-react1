@@ -30,7 +30,7 @@ import RequestDemo from "./pages/RequestDemo";
 const App = () => {
   return (
     <Router>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 overflow-x-hidden relative">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 relative">
         <AnimatedBackground />
 
         {/* Background Orbs */}

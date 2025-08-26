@@ -1,4 +1,3 @@
-// src/pages/RequestDemo.tsx
 import { useState } from "react";
 
 const RequestDemo = () => {
@@ -9,10 +8,32 @@ const RequestDemo = () => {
     employees: "",
     phone: "",
     message: "",
+    captcha: "",
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [captchaCode, setCaptchaCode] = useState("TWPTG4");
+  const [captchaError, setCaptchaError] = useState(false);
+
+  // Generate random captcha code
+  const generateCaptcha = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let result = "";
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setCaptchaCode(result);
+    setFormData(prev => ({ ...prev, captcha: "" }));
+    setCaptchaError(false);
+  };
+
+  // Format captcha input to uppercase only
+  const handleCaptchaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toUpperCase();
+    setFormData(prev => ({ ...prev, captcha: value }));
+    setCaptchaError(false);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
@@ -23,6 +44,13 @@ const RequestDemo = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate captcha
+    if (formData.captcha !== captchaCode) {
+      setCaptchaError(true);
+      return;
+    }
+
     setIsSubmitting(true);
 
     // Simulate API call
@@ -200,6 +228,46 @@ const RequestDemo = () => {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                     placeholder="e.g., AI recruitment, payroll automation, onboarding..."
                   ></textarea>
+                </div>
+
+                {/* Security Verification Section */}
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-gray-700">Security Verification</label>
+                    <button
+                      type="button"
+                      onClick={generateCaptcha}
+                      className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                      aria-label="Refresh captcha"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.356-2m15.356 2H15" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <div className="flex items-center justify-center bg-gray-50 border border-gray-300 rounded-lg p-3 w-full">
+                      <span className="text-lg font-mono font-bold text-gray-800">{captchaCode}</span>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <input
+                      type="text"
+                      value={formData.captcha}
+                      onChange={handleCaptchaChange}
+                      placeholder="ENTER THE CODE ABOVE"
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                        captchaError ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      maxLength={6}
+                      required
+                    />
+                    {captchaError && (
+                      <p className="text-red-500 text-sm mt-1">Invalid code. Please try again.</p>
+                    )}
+                  </div>
                 </div>
 
                 <button

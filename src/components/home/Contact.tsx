@@ -1,5 +1,63 @@
-// src/components/home/Contact.tsx
+import React, { useState, useEffect } from "react";
+
 const Contact: React.FC = () => {
+  const [captchaCode, setCaptchaCode] = useState("TWPTG4");
+  const [userInput, setUserInput] = useState("");
+  const [isCaptchaValid, setIsCaptchaValid] = useState(true);
+  const [showError, setShowError] = useState(false);
+  const [isFormSubmitted, setIsFormSubmitted] = useState(false);
+
+  // Generate random captcha code
+  const generateCaptcha = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let result = "";
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setCaptchaCode(result);
+    setUserInput("");
+    setIsCaptchaValid(true);
+    setShowError(false);
+  };
+
+  // Format input to uppercase only
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toUpperCase();
+    setUserInput(value);
+    
+    // Validate as user types
+    if (value.length === 6 && value !== captchaCode) {
+      setIsCaptchaValid(false);
+    } else {
+      setIsCaptchaValid(true);
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (userInput !== captchaCode) {
+      setShowError(true);
+      return;
+    }
+    
+    // Form submission logic here
+    setIsFormSubmitted(true);
+    setTimeout(() => {
+      setIsFormSubmitted(false);
+      // Reset form
+      const form = e.target as HTMLFormElement;
+      form.reset();
+      generateCaptcha();
+    }, 3000);
+  };
+
+  // Generate new captcha on component mount
+  useEffect(() => {
+    generateCaptcha();
+  }, []);
+
   return (
     <section id="contact-us" className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -63,60 +121,113 @@ const Contact: React.FC = () => {
 
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-2xl">
             <h3 className="text-2xl font-bold text-gray-900 mb-6">Send Us a Message</h3>
-            <form className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
+            
+            {isFormSubmitted ? (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6">
+                Thank you for your message! We'll get back to you soon.
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      placeholder="John"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      placeholder="Doe"
+                      required
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <input
+                    type="email"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    placeholder="john@example.com"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Company</label>
                   <input
                     type="text"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    placeholder="John"
+                    placeholder="Your Company"
+                    required
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                  <input
-                    type="text"
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                  <textarea
+                    rows={4}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    placeholder="Doe"
-                  />
+                    placeholder="How can we help you?"
+                    required
+                  ></textarea>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <input
-                  type="email"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="john@example.com"
-                />
-              </div>
+                {/* Security Verification Section */}
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-gray-700">Security Verification</label>
+                    <button
+                      type="button"
+                      onClick={generateCaptcha}
+                      className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                      aria-label="Refresh captcha"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.356-2m15.356 2H15" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <div className="flex items-center justify-center bg-white border border-gray-300 rounded-lg p-3 w-full">
+                      <span className="text-lg font-mono font-bold text-gray-800">{captchaCode}</span>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <input
+                      type="text"
+                      value={userInput}
+                      onChange={handleInputChange}
+                      placeholder="ENTER THE CODE ABOVE"
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                        showError ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      maxLength={6}
+                      required
+                    />
+                    {showError && (
+                      <p className="text-red-500 text-sm mt-1">Invalid code. Please try again.</p>
+                    )}
+                  </div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Company</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Your Company"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                <textarea
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="How can we help you?"
-                ></textarea>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:shadow-xl transition-all duration-300 hover:scale-105"
-              >
-                Send Message
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!isCaptchaValid || userInput.length !== 6}
+                >
+                  Send Message
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>
