@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 import logo from "../../assets/logo.svg";
 
@@ -6,6 +6,7 @@ const Header: React.FC = () => {
   const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const features = [
     "AI-Powered Recruitment",
@@ -27,6 +28,14 @@ const Header: React.FC = () => {
     return location.pathname === path;
   };
 
+  // Navigate to route and scroll to top
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    window.scrollTo(0, 0);
+    setIsMobileMenuOpen(false);
+    setIsFeaturesOpen(false);
+  };
+
   const handleFeaturesToggle = () => {
     setIsFeaturesOpen(!isFeaturesOpen);
   };
@@ -44,15 +53,18 @@ const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
+          <button 
+            onClick={() => handleNavigation("/")}
+            className="flex items-center"
+          >
             <img src={logo} alt="SYNC HRMS Logo" width={150} height={100} />
-          </Link>
+          </button>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-6">
             {/* Home */}
-            <Link
-              to="/"
+            <button
+              onClick={() => handleNavigation("/")}
               className={`text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 relative group ${
                 isActive("/") ? "text-blue-600" : ""
               }`}
@@ -61,7 +73,7 @@ const Header: React.FC = () => {
               <span className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
                 isActive("/") ? "w-full" : "w-0 group-hover:w-full"
               }`}></span>
-            </Link>
+            </button>
 
             {/* Features Dropdown */}
             <div 
@@ -69,8 +81,8 @@ const Header: React.FC = () => {
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
             >
-              <Link
-                to="/features"
+              <button
+                onClick={() => handleNavigation("/features")}
                 className={`flex items-center text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 relative group ${
                   isFeaturesOpen ? "text-blue-600" : ""
                 } ${
@@ -89,7 +101,7 @@ const Header: React.FC = () => {
                 <span className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
                   location.pathname.startsWith('/features') ? "w-full" : "w-0 group-hover:w-full"
                 }`}></span>
-              </Link>
+              </button>
 
               {/* Dropdown Menu */}
               {isFeaturesOpen && (
@@ -97,14 +109,13 @@ const Header: React.FC = () => {
                   <div className="p-6">
                     <div className="grid grid-cols-2 gap-3">
                       {features.map((feature) => (
-                        <Link
+                        <button
                           key={feature}
-                          to={`/features/${feature.toLowerCase().replace(/\s+/g, "-")}`}
-                          className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200 text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis"
-                          onClick={() => setIsFeaturesOpen(false)}
+                          onClick={() => handleNavigation(`/features/${feature.toLowerCase().replace(/\s+/g, "-")}`)}
+                          className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200 text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis text-left"
                         >
                           {feature}
-                        </Link>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -113,8 +124,8 @@ const Header: React.FC = () => {
             </div>
 
             {/* About Us */}
-            <Link
-              to="/about-us"
+            <button
+              onClick={() => handleNavigation("/about-us")}
               className={`text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 relative group ${
                 isActive("/about-us") ? "text-blue-600" : ""
               }`}
@@ -123,11 +134,11 @@ const Header: React.FC = () => {
               <span className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
                 isActive("/about-us") ? "w-full" : "w-0 group-hover:w-full"
               }`}></span>
-            </Link>
+            </button>
 
             {/* Pricing */}
-            <Link
-              to="/pricing"
+            <button
+              onClick={() => handleNavigation("/pricing")}
               className={`text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 relative group ${
                 isActive("/pricing") ? "text-blue-600" : ""
               }`}
@@ -136,11 +147,11 @@ const Header: React.FC = () => {
               <span className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
                 isActive("/pricing") ? "w-full" : "w-0 group-hover:w-full"
               }`}></span>
-            </Link>
+            </button>
 
             {/* Contact Us */}
-            <Link
-              to="/contact-us"
+            <button
+              onClick={() => handleNavigation("/contact-us")}
               className={`text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 relative group ${
                 isActive("/contact-us") ? "text-blue-600" : ""
               }`}
@@ -149,15 +160,21 @@ const Header: React.FC = () => {
               <span className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
                 isActive("/contact-us") ? "w-full" : "w-0 group-hover:w-full"
               }`}></span>
-            </Link>
+            </button>
           </nav>
 
           {/* Right Side Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/request-demo" className="bg-white border-2 border-blue-600 text-blue-600 px-6 py-2 rounded-full font-semibold hover:bg-blue-600 hover:text-white transition-all duration-300 hover:scale-105 shadow-lg">
+            <button 
+              onClick={() => handleNavigation("/request-demo")}
+              className="bg-white border-2 border-blue-600 text-blue-600 px-6 py-2 rounded-full font-semibold hover:bg-blue-600 hover:text-white transition-all duration-300 hover:scale-105 shadow-lg"
+            >
               Request Demo
-            </Link>
-            <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-full font-semibold hover:shadow-xl transition-all duration-300 hover:scale-105 shadow-lg">
+            </button>
+            <button 
+              onClick={() => handleNavigation("/send-enquiry")}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-full font-semibold hover:shadow-xl transition-all duration-300 hover:scale-105 shadow-lg"
+            >
               Send Enquiry
             </button>
           </div>
@@ -177,56 +194,49 @@ const Header: React.FC = () => {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden bg-white rounded-lg shadow-lg mt-2 py-4 animate-fadeIn border border-gray-100">
-            <Link
-              to="/"
-              className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200"
-              onClick={() => setIsMobileMenuOpen(false)}
+            <button
+              onClick={() => handleNavigation("/")}
+              className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200 w-full text-left"
             >
               Home
-            </Link>
-            <Link
-              to="/features"
-              className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200"
-              onClick={() => setIsMobileMenuOpen(false)}
+            </button>
+            <button
+              onClick={() => handleNavigation("/features")}
+              className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200 w-full text-left"
             >
               Features
-            </Link>
-            <Link
-              to="/about-us"
-              className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200"
-              onClick={() => setIsMobileMenuOpen(false)}
+            </button>
+            <button
+              onClick={() => handleNavigation("/about-us")}
+              className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200 w-full text-left"
             >
               About Us
-            </Link>
-            <Link
-              to="/pricing"
-              className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200"
-              onClick={() => setIsMobileMenuOpen(false)}
+            </button>
+            <button
+              onClick={() => handleNavigation("/pricing")}
+              className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200 w-full text-left"
             >
               Pricing
-            </Link>
-            <Link
-              to="/contact-us"
-              className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200"
-              onClick={() => setIsMobileMenuOpen(false)}
+            </button>
+            <button
+              onClick={() => handleNavigation("/contact-us")}
+              className="block px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200 w-full text-left"
             >
               Contact Us
-            </Link>
+            </button>
             <div className="px-4 pt-4 space-y-2">
-              <Link 
-                to="/request-demo" 
+              <button 
+                onClick={() => handleNavigation("/request-demo")}
                 className="w-full sm:w-auto bg-white border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-full font-semibold hover:bg-blue-600 hover:text-white transition-all duration-300 hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 block text-center"
-                onClick={() => setIsMobileMenuOpen(false)}
               >
                 Request Demo
-              </Link>
-              <Link 
-                to="/send-enquiry" 
+              </button>
+              <button 
+                onClick={() => handleNavigation("/send-enquiry")}
                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-full font-semibold hover:shadow-xl transition-all duration-300 block text-center"
-                onClick={() => setIsMobileMenuOpen(false)}
               >
                 Send Enquiry
-              </Link>
+              </button>
             </div>
           </div>
         )}

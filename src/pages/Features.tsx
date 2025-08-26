@@ -1,77 +1,90 @@
-// src/pages/Features.tsx
 import { Link } from "react-router-dom";
+import { 
+  Target, 
+  Rocket, 
+  Bot, 
+  BarChart2, 
+  DollarSign, 
+  MapPin, 
+  Calendar, 
+  MessageCircle, 
+  CheckCircle, 
+  DoorOpen, 
+  TrendingUp, 
+  CreditCard 
+} from "lucide-react";
 
 const featureList = [
   {
     id: "ai-powered-recruitment",
     title: "AI-Powered Recruitment",
-    icon: "🎯",
+    icon: <Target className="w-10 h-10 text-blue-600" />,
     description: "Intelligent resume parsing & candidate-job fit analysis with chatbot-based pre-screening"
   },
   {
     id: "smart-onboarding-assistant",
     title: "Smart Onboarding Assistant",
-    icon: "🚀",
+    icon: <Rocket className="w-10 h-10 text-blue-600" />,
     description: "AI-guided onboarding with automated document checks and personalized journeys"
   },
   {
     id: "employee-self-service-chatbot",
     title: "Employee Self-Service Chatbot",
-    icon: "🤖",
+    icon: <Bot className="w-10 h-10 text-blue-600" />,
     description: "24/7 natural language queries for leave, payroll, and policies in multiple languages"
   },
   {
     id: "performance-productivity-insights",
     title: "Performance & Productivity Insights",
-    icon: "📊",
+    icon: <BarChart2 className="w-10 h-10 text-blue-600" />,
     description: "Data-driven evaluation with burnout detection and personalized training suggestions"
   },
   {
     id: "payroll-compliance-automation",
     title: "Payroll & Compliance Automation",
-    icon: "💰",
+    icon: <DollarSign className="w-10 h-10 text-blue-600" />,
     description: "AI-driven salary, tax, and compliance accuracy with auto-updates for Indian labor laws"
   },
   {
     id: "attendance",
     title: "Attendance",
-    icon: "📍",
+    icon: <MapPin className="w-10 h-10 text-blue-600" />,
     description: "Geo-fencing & face recognition for zero proxy attendance"
   },
   {
     id: "leaves",
     title: "Leaves",
-    icon: "📅",
+    icon: <Calendar className="w-10 h-10 text-blue-600" />,
     description: "Automated leave balance, approval workflows, and policy enforcement"
   },
   {
     id: "helpdesk",
     title: "Helpdesk",
-    icon: "🛎️",
+    icon: <MessageCircle className="w-10 h-10 text-blue-600" />,
     description: "Ticketing system for HR queries with SLA tracking"
   },
   {
     id: "onboarding",
     title: "Onboarding",
-    icon: "✅",
+    icon: <CheckCircle className="w-10 h-10 text-blue-600" />,
     description: "Digital onboarding with e-sign, document upload, and checklist tracking"
   },
   {
     id: "exit-management",
     title: "Exit Management",
-    icon: "🚪",
+    icon: <DoorOpen className="w-10 h-10 text-blue-600" />,
     description: "Streamlined offboarding with clearance, feedback, and exit interviews"
   },
   {
     id: "performance-management",
     title: "Performance Management",
-    icon: "📈",
+    icon: <TrendingUp className="w-10 h-10 text-blue-600" />,
     description: "OKR tracking, 360 feedback, and review cycles"
   },
   {
     id: "payroll",
     title: "Payroll",
-    icon: "💳",
+    icon: <CreditCard className="w-10 h-10 text-blue-600" />,
     description: "Seamless salary processing with tax and compliance integration"
   }
 ];
@@ -96,12 +109,12 @@ const Features = () => {
               to={`/features/${feature.id}`}
               className="group bg-gradient-to-br from-white to-blue-50 p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-blue-100"
             >
-              <div className="text-5xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
+              <div className="flex items-center justify-center mb-4 transform group-hover:scale-110 transition-transform duration-300">
                 {feature.icon}
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{feature.description}</p>
-              <div className="mt-4 w-12 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"></div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">{feature.title}</h3>
+              <p className="text-gray-600 leading-relaxed text-center">{feature.description}</p>
+              <div className="mt-6 w-12 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mx-auto"></div>
             </Link>
           ))}
         </div>
