@@ -1,5 +1,6 @@
+// src/components/layout/Header.tsx
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import logo from "../../assets/logo.svg";
 
 const Header: React.FC = () => {
@@ -7,6 +8,8 @@ const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const featuresRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const features = [
     "AI-Powered Recruitment",
@@ -16,11 +19,11 @@ const Header: React.FC = () => {
     "Payroll & Compliance Automation",
     "Attendance",
     "Leaves",
-    "Payroll",
     "Helpdesk",
     "Onboarding",
     "Exit Management",
     "Performance Management",
+    "Activity Report Logging"
   ];
 
   // Check if current path matches a route
@@ -36,17 +39,45 @@ const Header: React.FC = () => {
     setIsFeaturesOpen(false);
   };
 
-  const handleFeaturesToggle = () => {
-    setIsFeaturesOpen(!isFeaturesOpen);
-  };
-
+  // Handle mouse enter with delay
   const handleMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     setIsFeaturesOpen(true);
   };
 
+  // Handle mouse leave with delay
   const handleMouseLeave = () => {
-    setIsFeaturesOpen(false);
+    timeoutRef.current = setTimeout(() => {
+      setIsFeaturesOpen(false);
+    }, 300);
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (featuresRef.current && !featuresRef.current.contains(event.target as Node)) {
+        setIsFeaturesOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Close dropdown when route changes
+  useEffect(() => {
+    setIsFeaturesOpen(false);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  }, [location.pathname]);
 
   return (
     <header className="relative z-50 bg-white/90 backdrop-blur-md shadow-lg sticky top-0">
@@ -76,11 +107,7 @@ const Header: React.FC = () => {
             </button>
 
             {/* Features Dropdown */}
-            <div 
-              className="relative group"
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
+            <div ref={featuresRef} className="relative group">
               <button
                 onClick={() => handleNavigation("/features")}
                 className={`flex items-center text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 relative group ${
@@ -88,6 +115,7 @@ const Header: React.FC = () => {
                 } ${
                   location.pathname.startsWith('/features') ? "text-blue-600" : ""
                 }`}
+                onMouseEnter={handleMouseEnter}
               >
                 Features
                 <svg
@@ -104,23 +132,33 @@ const Header: React.FC = () => {
               </button>
 
               {/* Dropdown Menu */}
-              {isFeaturesOpen && (
-                <div className="absolute left-0 mt-2 w-[600px] bg-white border border-gray-200 rounded-lg shadow-xl z-50 animate-fadeIn">
-                  <div className="p-6">
-                    <div className="grid grid-cols-2 gap-3">
-                      {features.map((feature) => (
+              <div 
+                className="absolute left-0 mt-2 w-[600px] bg-white border border-gray-200 rounded-lg shadow-xl z-50 animate-fadeIn"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                style={{ display: isFeaturesOpen ? 'block' : 'none' }}
+              >
+                <div className="p-6">
+                  <div className="grid grid-cols-2 gap-3">
+                    {features.map((feature) => {
+                      let slug = feature.toLowerCase().replace(/&/g, 'and').replace(/\s+/g, "-");
+                      // Special cases for known features
+                      if (feature === "Performance & Productivity Insights") slug = "performance-productivity-insights";
+                      if (feature === "Payroll & Compliance Automation") slug = "payroll-compliance-automation";
+                      if (feature === "Activity Report Logging") slug = "activity-report-logging";
+                      return (
                         <button
                           key={feature}
-                          onClick={() => handleNavigation(`/features/${feature.toLowerCase().replace(/\s+/g, "-")}`)}
+                          onClick={() => handleNavigation(`/features/${slug}`)}
                           className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200 text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis text-left"
                         >
                           {feature}
                         </button>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* About Us */}

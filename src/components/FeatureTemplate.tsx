@@ -1,3 +1,4 @@
+// src/components/FeatureTemplate.tsx
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -32,6 +33,12 @@ const FeatureTemplate: React.FC<FeatureTemplateProps> = ({
       y: 0,
       transition: { duration: 0.6 }
     }
+  };
+
+  // Handle navigation with scroll to top
+  const handleNavigation = (path: string) => {
+    window.location.href = path;
+    window.scrollTo(0, 0);
   };
 
   return (
@@ -171,18 +178,18 @@ const FeatureTemplate: React.FC<FeatureTemplateProps> = ({
                 <p className="text-blue-100">Schedule a personalized demo to see how our solution can benefit your organization.</p>
               </div>
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <Link 
-                  to="/request-demo" 
-                  className="bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg text-center"
+                <button
+                  onClick={() => handleNavigation("/request-demo")}
+                  className="bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg text-center w-full sm:w-auto"
                 >
                   Request Demo
-                </Link>
-                <Link 
-                  to="/contact-sales" 
-                  className="border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105 text-center"
+                </button>
+                <button
+                  onClick={() => handleNavigation("/contact-us")}
+                  className="border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105 text-center w-full sm:w-auto"
                 >
                   Contact Sales
-                </Link>
+                </button>
               </div>
             </div>
           </motion.div>

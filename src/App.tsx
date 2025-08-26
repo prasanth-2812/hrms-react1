@@ -26,6 +26,7 @@ import ExitManagement from "./pages/features/ExitManagement";
 import PerformanceManagement from "./pages/features/PerformanceManagement";
 import Payroll from "./pages/features/Payroll";
 import RequestDemo from "./pages/RequestDemo";
+import ActivityReportLogging from "./pages/features/ActivityReportLogging";
 
 const App = () => {
   return (
@@ -65,6 +66,7 @@ const App = () => {
             <Route path="/features/exit-management" element={<ExitManagement />} />
             <Route path="/features/performance-management" element={<PerformanceManagement />} />
             <Route path="/features/payroll" element={<Payroll />} />
+            <Route path="/features/activity-report-logging" element={<ActivityReportLogging />} />
           </Routes>
         </main>
 

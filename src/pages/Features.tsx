@@ -1,3 +1,4 @@
+// src/components/home/Features.tsx
 import { Link } from "react-router-dom";
 import { 
   Target, 
@@ -11,8 +12,21 @@ import {
   CheckCircle, 
   DoorOpen, 
   TrendingUp, 
-  CreditCard 
+  CreditCard,
+  Flag,
+  ClipboardCheck,
+  RefreshCw,
+  Users,
+  Clock,
+  Check,
+  TrendingUp as TrendingUpIcon,
+  MessageSquare,
+  Shield,
+  Zap,
+  BarChart3,
+  FileText
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const featureList = [
   {
@@ -86,6 +100,12 @@ const featureList = [
     title: "Payroll",
     icon: <CreditCard className="w-10 h-10 text-blue-600" />,
     description: "Seamless salary processing with tax and compliance integration"
+  },
+  {
+    id: "activity-report-logging",
+    title: "Activity Report Logging",
+    icon: <Flag className="w-10 h-10 text-blue-600" />,
+    description: "Real-time tracking and reporting of field activities with instant meeting reporting and follow-up tracking"
   }
 ];
 
@@ -103,19 +123,25 @@ const Features = () => {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {featureList.map((feature) => (
-            <Link
+          {featureList.map((feature, index) => (
+            <motion.div
               key={feature.id}
-              to={`/features/${feature.id}`}
-              className="group bg-gradient-to-br from-white to-blue-50 p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-blue-100"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <div className="flex items-center justify-center mb-4 transform group-hover:scale-110 transition-transform duration-300">
-                {feature.icon}
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">{feature.title}</h3>
-              <p className="text-gray-600 leading-relaxed text-center">{feature.description}</p>
-              <div className="mt-6 w-12 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mx-auto"></div>
-            </Link>
+              <Link
+                to={`/features/${feature.id}`}
+                className="group bg-gradient-to-br from-white to-blue-50 p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-blue-100 block h-full"
+              >
+                <div className="flex items-center justify-center mb-4 transform group-hover:scale-110 transition-transform duration-300">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">{feature.title}</h3>
+                <p className="text-gray-600 leading-relaxed text-center">{feature.description}</p>
+                <div className="mt-6 w-12 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mx-auto"></div>
+              </Link>
+            </motion.div>
           ))}
         </div>
       </div>
