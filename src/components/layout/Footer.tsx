@@ -58,15 +58,15 @@ const Footer = () => {
               { name: "Pricing", path: "/pricing", scrollToTop: true }
             ]],
             ["Resources", [
-              { name: "Help Center", path: "/helpdesk", scrollToTop: true },
-              { name: "Documentation", path: "/documentation", scrollToTop: true },
+              { name: "Help Center", path: "/contact-us", scrollToTop: true },
+              { name: "Documentation", path: "/contact-us", scrollToTop: true },
               
             ]],
             ["Legal", [
-              { name: "Privacy Policy", path: "/privacy", scrollToTop: true },
-              { name: "Terms & Conditions", path: "/terms", scrollToTop: true },
-              { name: "Security", path: "/security", scrollToTop: true },
-              { name: "Compliance", path: "/compliance", scrollToTop: true }
+              { name: "Privacy Policy", path: "/contact-us", scrollToTop: true },
+              { name: "Terms & Conditions", path: "/contact-us", scrollToTop: true },
+              { name: "Security", path: "/contact-us", scrollToTop: true },
+              { name: "Compliance", path: "/contact-us", scrollToTop: true }
             ]]
           ] as [string, { name: string, path: string, scrollToTop: boolean }[]][]).map((column, index) => (
             <div key={index}>
@@ -95,13 +95,13 @@ const Footer = () => {
               &copy; 2025 Tanasvi Technologies Pvt. Ltd. All rights reserved.
             </p>
              <div className="flex space-x-6 mb-4 md:mb-0">
-              <Link to="/privacy" onClick={scrollToTop} className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
+              <Link to="/contact-us" onClick={scrollToTop} className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
                 Privacy Policy
               </Link>
-              <Link to="/terms" onClick={scrollToTop} className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
+              <Link to="/contact-us" onClick={scrollToTop} className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
                 Terms of Service
               </Link>
-              <Link to="/security" onClick={scrollToTop} className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
+              <Link to="/contact-us" onClick={scrollToTop} className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
                 Security
               </Link>
             </div>

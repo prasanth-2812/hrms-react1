@@ -1,19 +1,16 @@
-import { useState } from "react";
+// src/components/home/SendEnquiry.tsx
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const SendEnquiry = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    company: "",
-    message: "",
-    captcha: "",
-  });
-
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [captchaCode, setCaptchaCode] = useState("TWPTG4");
-  const [captchaError, setCaptchaError] = useState(false);
-  const [submitError, setSubmitError] = useState("");
+  const [userInput, setUserInput] = useState("");
+  const [isCaptchaValid, setIsCaptchaValid] = useState(true);
+  const [showError, setShowError] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [formKey, setFormKey] = useState(0); // Add form key for reset
 
   // Generate random captcha code
   const generateCaptcha = () => {
@@ -23,84 +20,136 @@ const SendEnquiry = () => {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     setCaptchaCode(result);
-    setFormData(prev => ({ ...prev, captcha: "" }));
-    setCaptchaError(false);
-    setSubmitError("");
+    setUserInput("");
+    setIsCaptchaValid(true);
+    setShowError(false);
+    setFormErrors({});
   };
 
-  // Format captcha input to uppercase only
-  const handleCaptchaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Format input to uppercase only
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toUpperCase();
-    setFormData(prev => ({ ...prev, captcha: value }));
-    setCaptchaError(false);
-    setSubmitError("");
+    setUserInput(value);
+    
+    // Validate as user types
+    if (value.length === 6 && value !== captchaCode) {
+      setIsCaptchaValid(false);
+    } else {
+      setIsCaptchaValid(true);
+    }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setSubmitError("");
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Validate captcha
-    if (formData.captcha !== captchaCode) {
-      setCaptchaError(true);
+    // Validate form fields
+    const errors: Record<string, string> = {};
+    const formData = new FormData(e.currentTarget);
+    
+    if (!formData.get('companyName')) {
+      errors.companyName = "Company name is required";
+    }
+    
+    if (!formData.get('employeeCount')) {
+      errors.employeeCount = "Employee count is required";
+    }
+    
+    if (!formData.get('name')) {
+      errors.name = "Name is required";
+    }
+    
+    if (!formData.get('email')) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.get('email') as string)) {
+      errors.email = "Email is invalid";
+    }
+    
+    if (!formData.get('contactNumber')) {
+      errors.contactNumber = "Contact number is required";
+    }
+    
+    if (!formData.get('sector')) {
+      errors.sector = "Sector is required";
+    }
+    
+    if (!userInput || userInput !== captchaCode) {
+      setShowError(true);
+      errors.captcha = "Invalid captcha";
+    }
+    
+    setFormErrors(errors);
+    
+    if (Object.keys(errors).length > 0) {
       return;
     }
-
+    
     setIsSubmitting(true);
-    setSubmitError("");
-
+    
     try {
-      // Make actual API call to your backend
       const response = await fetch('http://localhost:5000/api/send-enquiry', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          company: formData.company,
-          message: formData.message
+          name: formData.get('name'),
+          email: formData.get('email'),
+          company: formData.get('companyName'),
+          sector: formData.get('sector'),
+          message: `Employee Count: ${formData.get('employeeCount')}, Contact: ${formData.get('contactNumber')}`
         }),
       });
 
       if (response.ok) {
+        // Show success state
         setIsSubmitted(true);
+        
+        // Reset form
+        setFormKey(prev => prev + 1);
+        generateCaptcha();
+        
+        // Reset after 5 seconds
+        setTimeout(() => {
+          setIsSubmitted(false);
+        }, 5000);
       } else {
+        // Handle server error
         const result = await response.json();
-        setSubmitError(result.message || 'Failed to submit form. Please try again.');
+        setFormErrors({ submit: result.message || "There was an error submitting your form. Please try again." });
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      setSubmitError('Network error. Please check your connection and try again.');
+      setFormErrors({ submit: "Network error. Please check your connection and try again." });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Generate new captcha on component mount
+  useEffect(() => {
+    generateCaptcha();
+  }, []);
+
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-24 flex items-center justify-center">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="bg-white p-12 rounded-2xl shadow-xl border border-blue-100">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Thank You!</h2>
-            <p className="text-xl text-gray-600 mb-6">
-              We've received your enquiry. Our team will contact you within 24 hours to discuss your requirements.
-            </p>
-            <p className="text-gray-500">
-              <strong>Next Steps:</strong> Check your email for confirmation and our response.
-            </p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white p-8 rounded-2xl shadow-xl border border-blue-100 text-center max-w-md w-full"
+        >
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
           </div>
-        </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Thank You!</h2>
+          <p className="text-gray-600">
+            We've received your enquiry and will contact you shortly.
+          </p>
+        </motion.div>
       </div>
     );
   }
@@ -146,79 +195,182 @@ const SendEnquiry = () => {
           </div>
 
           {/* Right Side - Form */}
-          <div className="relative">
+          <motion.div 
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="relative"
+          >
+            {/* Background gradient with subtle rotation */}
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl transform rotate-6"></div>
+            
+            {/* White Card with Proper Shadow */}
             <div className="relative bg-white p-8 md:p-10 rounded-2xl shadow-2xl">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Send Us an Enquiry</h2>
-              
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
+
+              <form 
+                key={formKey} 
+                onSubmit={handleSubmit} 
+                className="space-y-6"
+              >
+                {/* Company Name */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                >
+                  <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
+                    Company Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="companyName"
+                    name="companyName"
+                    required
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                      formErrors.companyName ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter company name"
+                  />
+                  {formErrors.companyName && (
+                    <p className="text-red-500 text-sm mt-1">{formErrors.companyName}</p>
+                  )}
+                </motion.div>
+
+                {/* Employee Count & Name (side-by-side) */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                  >
+                    <label htmlFor="employeeCount" className="block text-sm font-medium text-gray-700 mb-1">
+                      Employee Count *
+                    </label>
+                    <select
+                      id="employeeCount"
+                      name="employeeCount"
+                      required
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                        formErrors.employeeCount ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    >
+                      <option value="">Select employee count</option>
+                      <option value="1-10">1-10 Employees</option>
+                      <option value="11-50">11-50 Employees</option>
+                      <option value="51-100">51-100 Employees</option>
+                      <option value="101-200">101-200 Employees</option>
+                      <option value="201-500">201-500 Employees</option>
+                      <option value="501-1000">501-1,000 Employees</option>
+                      <option value="1000+">1,000+ Employees</option>
+                    </select>
+                    {formErrors.employeeCount && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.employeeCount}</p>
+                    )}
+                  </motion.div>
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.6 }}
+                  >
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Full Name *
+                      Name *
                     </label>
                     <input
                       type="text"
                       id="name"
                       name="name"
-                      value={formData.name}
-                      onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                      placeholder="Enter your full name"
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                        formErrors.name ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="Enter name"
                     />
-                  </div>
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                      Work Email *
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                      placeholder="your@company.com"
-                    />
-                  </div>
+                    {formErrors.name && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>
+                    )}
+                  </motion.div>
                 </div>
 
-                <div>
-                  <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-1">
-                    Company Name *
+                {/* Email */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.7 }}
+                >
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email *
                   </label>
                   <input
-                    type="text"
-                    id="company"
-                    name="company"
-                    value={formData.company}
-                    onChange={handleChange}
+                    type="email"
+                    id="email"
+                    name="email"
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    placeholder="Your company name"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                      formErrors.email ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter email"
                   />
-                </div>
+                  {formErrors.email && (
+                    <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
+                  )}
+                </motion.div>
 
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                    Your Message *
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    rows={5}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    placeholder="Tell us about your HR needs, challenges, and goals..."
-                    required
-                  ></textarea>
+                {/* Contact Number & Sector (side-by-side) */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.8 }}
+                  >
+                    <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                      Contact Number *
+                    </label>
+                    <input
+                      type="tel"
+                      id="contactNumber"
+                      name="contactNumber"
+                      required
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                        formErrors.contactNumber ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="Enter contact number"
+                    />
+                    {formErrors.contactNumber && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.contactNumber}</p>
+                    )}
+                  </motion.div>
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.9 }}
+                  >
+                    <label htmlFor="sector" className="block text-sm font-medium text-gray-700 mb-1">
+                      Sector *
+                    </label>
+                    <input
+                      type="text"
+                      id="sector"
+                      name="sector"
+                      required
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                        formErrors.sector ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="Enter sector"
+                    />
+                    {formErrors.sector && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.sector}</p>
+                    )}
+                  </motion.div>
                 </div>
 
                 {/* Security Verification Section */}
-                <div className="mt-6">
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 1.0 }}
+                  className="mt-6"
+                >
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-sm font-medium text-gray-700">Security Verification</label>
                     <button
@@ -234,7 +386,7 @@ const SendEnquiry = () => {
                   </div>
                   
                   <div className="mb-3">
-                    <div className="flex items-center justify-center bg-gray-50 border border-gray-300 rounded-lg p-3 w-full">
+                    <div className="flex items-center justify-center bg-gray-50 border border-gray-200 rounded-lg p-3 w-full">
                       <span className="text-lg font-mono font-bold text-gray-800">{captchaCode}</span>
                     </div>
                   </div>
@@ -242,41 +394,48 @@ const SendEnquiry = () => {
                   <div>
                     <input
                       type="text"
-                      value={formData.captcha}
-                      onChange={handleCaptchaChange}
+                      value={userInput}
+                      onChange={handleInputChange}
                       placeholder="ENTER THE CODE ABOVE"
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                        captchaError ? 'border-red-500' : 'border-gray-300'
+                        showError ? 'border-red-500' : 'border-gray-300'
                       }`}
                       maxLength={6}
-                      required
                     />
-                    {captchaError && (
+                    {showError && (
                       <p className="text-red-500 text-sm mt-1">Invalid code. Please try again.</p>
                     )}
                   </div>
-                </div>
+                </motion.div>
 
-                {submitError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                    {submitError}
-                  </div>
+                {formErrors.submit && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
+                  >
+                    {formErrors.submit}
+                  </motion.div>
                 )}
 
-                <button
+                {/* Submit Button */}
+                <motion.button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !isCaptchaValid || userInput.length !== 6}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-lg font-semibold text-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? "Sending..." : "Send Enquiry"}
-                </button>
+                </motion.button>
               </form>
             </div>
 
             {/* Floating Decorative Elements */}
             <div className="absolute -top-4 -right-4 w-20 h-20 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-bounce"></div>
             <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-bounce delay-500"></div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

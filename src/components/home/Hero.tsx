@@ -69,11 +69,11 @@ const Hero: React.FC = () => {
       errors.contactNumber = "Contact number is required";
     }
     
-    if (!formData.get('panTAN')) {
-      errors.panTAN = "PAN/TAN is required";
+    if (!formData.get('sector')) {
+      errors.sector = "Sector is required";
     }
     
-    if (userInput !== captchaCode) {
+    if (!userInput || userInput !== captchaCode) {
       setShowError(true);
       errors.captcha = "Invalid captcha";
     }
@@ -96,7 +96,8 @@ const Hero: React.FC = () => {
           name: formData.get('name'),
           email: formData.get('email'),
           company: formData.get('companyName'),
-          message: `Employee Count: ${formData.get('employeeCount')}, Contact: ${formData.get('contactNumber')}, PAN/TAN: ${formData.get('panTAN')}`
+          sector: formData.get('sector'),
+          message: `Employee Count: ${formData.get('employeeCount')}, Contact: ${formData.get('contactNumber')}`
         }),
       });
 
@@ -108,7 +109,7 @@ const Hero: React.FC = () => {
         setFormKey(prev => prev + 1);
         generateCaptcha();
         
-        // Hide success popup after 5 seconds and refresh page
+        // Hide success popup after 3 seconds and refresh page
         setTimeout(() => {
           setShowSuccess(false);
           // Refresh the page after success
@@ -162,9 +163,10 @@ const Hero: React.FC = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="flex flex-wrap gap-4"
             >
-              <a href="#request-demo" className="border-2 border-blue-600 text-blue-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-blue-600 hover:text-white transition-all duration-300 hover:scale-105">
-                Watch Demo
+              <a href="/request-demo" className="border-2 border-blue-600 text-blue-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-blue-600 hover:text-white transition-all duration-300 hover:scale-105">
+                Request Demo
               </a>
+              
             </motion.div>
 
             <motion.div 
@@ -241,16 +243,23 @@ const Hero: React.FC = () => {
                     <label htmlFor="employeeCount" className="block text-sm font-medium text-gray-700 mb-1">
                       Employee Count *
                     </label>
-                    <input
-                      type="number"
+                    <select
                       id="employeeCount"
                       name="employeeCount"
                       required
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                         formErrors.employeeCount ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder="Enter number of employees"
-                    />
+                    >
+                      <option value="">Select employee count</option>
+                      <option value="1-10">1-10 Employees</option>
+                      <option value="11-50">11-50 Employees</option>
+                      <option value="51-100">51-100 Employees</option>
+                      <option value="101-200">101-200 Employees</option>
+                      <option value="201-500">201-500 Employees</option>
+                      <option value="501-1000">501-1,000 Employees</option>
+                      <option value="1000+">1,000+ Employees</option>
+                    </select>
                     {formErrors.employeeCount && (
                       <p className="text-red-500 text-sm mt-1">{formErrors.employeeCount}</p>
                     )}
@@ -303,7 +312,7 @@ const Hero: React.FC = () => {
                   )}
                 </motion.div>
 
-                {/* Contact Number & PAN/TAN (side-by-side) */}
+                {/* Contact Number & Sector (side-by-side) */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }}
@@ -332,21 +341,21 @@ const Hero: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.9 }}
                   >
-                    <label htmlFor="panTAN" className="block text-sm font-medium text-gray-700 mb-1">
-                      PAN / TAN of Organisation *
+                    <label htmlFor="sector" className="block text-sm font-medium text-gray-700 mb-1">
+                      Sector *
                     </label>
                     <input
                       type="text"
-                      id="panTAN"
-                      name="panTAN"
+                      id="sector"
+                      name="sector"
                       required
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                        formErrors.panTAN ? 'border-red-500' : 'border-gray-300'
+                        formErrors.sector ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder="Enter PAN / TAN of organisation"
+                      placeholder="Enter sector"
                     />
-                    {formErrors.panTAN && (
-                      <p className="text-red-500 text-sm mt-1">{formErrors.panTAN}</p>
+                    {formErrors.sector && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.sector}</p>
                     )}
                   </motion.div>
                 </div>
