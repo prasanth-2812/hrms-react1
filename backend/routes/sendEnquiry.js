@@ -23,13 +23,13 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Use the provided Cloudinary URL for your logo
+    // Clean logo URL (remove accidental whitespace)
     const logoUrl = "https://res.cloudinary.com/dl0vnawrx/image/upload/v1756370244/hrmslogo_jszdx6.png";
 
     // Email to business owner
     const ownerMailOptions = {
-      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM}>`,
-      to: process.env.OWNER_EMAIL || process.env.EMAIL_FROM,
+      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_EMAIL}>`,
+      to: process.env.OWNER_EMAIL,
       subject: `New Enquiry from ${name} at ${company}`,
       html: `
         <!DOCTYPE html>
@@ -161,7 +161,7 @@ router.post('/', async (req, res) => {
 
     // Email to customer (confirmation)
     const customerMailOptions = {
-      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM}>`,
+      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_EMAIL}>`,
       to: email,
       subject: 'Thank you for your enquiry - Sync HRM',
       html: `
@@ -279,7 +279,7 @@ router.post('/', async (req, res) => {
                 <p>"${message}"</p>
               </div>
               
-              <p>We'll review your request and contact you at ${email} to discuss how we can help transform your HR processes with AI-powered automation, real-time analytics, and seamless integration.</p>
+              <p>We'll review your request and contact you at <strong>${email}</strong> to discuss how we can help transform your HR processes with AI-powered automation, real-time analytics, and seamless integration.</p>
               
               <p class="signature">Best regards,<br>The Sync HRM Team</p>
             </div>
@@ -305,11 +305,14 @@ router.post('/', async (req, res) => {
       success: true,
       message: 'Enquiry submitted successfully' 
     });
+
   } catch (error) {
     console.error('Error in sendEnquiry route:', error);
+    
+    // Handle specific email sending errors
     res.status(500).json({ 
       success: false,
-      message: 'Failed to send enquiry. Please try again.' 
+      message: 'Failed to send enquiry. Please try again later.' 
     });
   }
 });

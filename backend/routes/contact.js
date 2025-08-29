@@ -8,30 +8,30 @@ router.post('/', async (req, res) => {
 
     // Validate required fields
     if (!firstName || !lastName || !email || !company || !message) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: 'All fields are required' 
+        message: 'All fields are required',
       });
     }
 
     // Validate email format
     const emailRegex = /\S+@\S+\.\S+/;
     if (!emailRegex.test(email)) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: 'Please provide a valid email address' 
+        message: 'Please provide a valid email address',
       });
     }
 
     const fullName = `${firstName} ${lastName}`;
-    
+
     // Use the Cloudinary URL for your logo
-    const logoUrl = "https://res.cloudinary.com/dl0vnawrx/image/upload/v1756370244/hrmslogo_jszdx6.png";
+    const logoUrl = 'https://res.cloudinary.com/dl0vnawrx/image/upload/v1756370244/hrmslogo_jszdx6.png';
 
     // Email to business owner
     const ownerMailOptions = {
-      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM}>`,
-      to: process.env.OWNER_EMAIL || process.env.EMAIL_FROM,
+      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_EMAIL}>`,
+      to: process.env.OWNER_EMAIL || process.env.EMAIL_FROM_EMAIL,
       subject: `Contact Form Submission from ${fullName}`,
       html: `
         <!DOCTYPE html>
@@ -159,7 +159,7 @@ router.post('/', async (req, res) => {
 
     // Email to customer (confirmation)
     const customerMailOptions = {
-      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM}>`,
+      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_EMAIL}>`,
       to: email,
       subject: 'Thank you for contacting us - Sync HRM',
       html: `
@@ -296,18 +296,18 @@ router.post('/', async (req, res) => {
     // Send both emails
     await Promise.all([
       req.transporter.sendMail(ownerMailOptions),
-      req.transporter.sendMail(customerMailOptions)
+      req.transporter.sendMail(customerMailOptions),
     ]);
 
-    res.status(200).json({ 
+    res.status(200).json({
       success: true,
-      message: 'Message sent successfully' 
+      message: 'Message sent successfully',
     });
   } catch (error) {
     console.error('Error in contact route:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: 'Failed to send message. Please try again.' 
+      message: 'Failed to send message. Please try again.',
     });
   }
 });
