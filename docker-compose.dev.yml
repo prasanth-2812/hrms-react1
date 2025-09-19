@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # Frontend development service
+  frontend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    networks:
+      - hrms-network
+
+  # Backend development service
+  backend-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+    networks:
+      - hrms-network
+    env_file:
+      - .env
+
+networks:
+  hrms-network:
+    driver: bridge

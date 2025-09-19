@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # Frontend service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - hrms-network
+
+  # Backend service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    restart: unless-stopped
+    networks:
+      - hrms-network
+    # Add environment variables for email configuration
+    env_file:
+      - .env
+
+networks:
+  hrms-network:
+    driver: bridge
+
+# Optional: Add volumes for persistent data
+volumes:
+  node_modules:

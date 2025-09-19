@@ -14,25 +14,38 @@ const Contact = () => {
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [captchaCode, setCaptchaCode] = useState(generateCaptcha());
+  const [captchaCode, setCaptchaCode] = useState("");
+  const [captchaSessionId, setCaptchaSessionId] = useState("");
   const [captchaError, setCaptchaError] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // Generate random captcha code
-  function generateCaptcha() {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let result = "";
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+  // Fetch CAPTCHA from backend
+  const fetchCaptcha = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://125.18.84.106:5002'}/api/contact/captcha`);
+      const data = await response.json();
+      if (data.success) {
+        setCaptchaCode(data.captcha);
+        setCaptchaSessionId(data.sessionId);
+        setFormData(prev => ({ ...prev, captcha: "" }));
+        setCaptchaError(false);
+        setFormErrors(prev => ({ ...prev, captcha: "" }));
+      }
+    } catch (error) {
+      console.error('Error fetching CAPTCHA:', error);
+      // Fallback to client-side generation
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let result = "";
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      setCaptchaCode(result);
+      setCaptchaSessionId("fallback_" + Date.now());
     }
-    return result;
-  }
+  };
 
   const refreshCaptcha = () => {
-    setCaptchaCode(generateCaptcha());
-    setFormData(prev => ({ ...prev, captcha: "" }));
-    setCaptchaError(false);
-    setFormErrors(prev => ({ ...prev, captcha: "" }));
+    fetchCaptcha();
   };
 
   const handleCaptchaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,8 +94,10 @@ const Contact = () => {
       errors.message = "Message is required";
     }
     
-    if (formData.captcha !== captchaCode) {
-      errors.captcha = "Invalid captcha";
+    if (!formData.captcha.trim()) {
+      errors.captcha = "Security verification is required";
+    } else if (captchaSessionId.startsWith("fallback") && formData.captcha !== captchaCode) {
+      errors.captcha = "Invalid security code";
     }
     
     setFormErrors(errors);
@@ -99,7 +114,7 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/contact', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://125.18.84.106:5002'}/api/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,7 +124,9 @@ const Contact = () => {
           lastName: formData.lastName,
           email: formData.email,
           company: formData.company,
-          message: formData.message
+          message: formData.message,
+          captcha: formData.captcha,
+          sessionId: captchaSessionId
         }),
       });
 
@@ -132,7 +149,19 @@ const Contact = () => {
         }, 5000);
       } else {
         const result = await response.json();
-        setFormErrors({ submit: result.message || 'Failed to submit form' });
+        
+        // Handle specific field errors
+        if (result.field === 'captcha') {
+          setFormErrors({ captcha: result.message });
+          // Refresh CAPTCHA on error
+          refreshCaptcha();
+        } else if (result.field === 'email') {
+          setFormErrors({ email: result.message });
+        } else if (result.field === 'required_fields') {
+          setFormErrors({ submit: result.message });
+        } else {
+          setFormErrors({ submit: result.message || 'Failed to submit form' });
+        }
       }
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -145,6 +174,8 @@ const Contact = () => {
   useEffect(() => {
     // Add smooth scroll behavior
     document.body.style.overflowY = 'auto';
+    // Fetch initial CAPTCHA
+    fetchCaptcha();
   }, []);
 
   if (isSubmitted) {
@@ -400,7 +431,8 @@ const Contact = () => {
                   <button
                     type="button"
                     onClick={refreshCaptcha}
-                    className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                    disabled={isSubmitting}
+                    className="text-gray-500 hover:text-gray-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label="Refresh captcha"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -410,8 +442,15 @@ const Contact = () => {
                 </div>
                 
                 <div className="mb-3">
-                  <div className="flex items-center justify-center bg-gray-50 border border-gray-300 rounded-lg p-3 w-full">
-                    <span className="text-lg font-mono font-bold text-gray-800">{captchaCode}</span>
+                  <div className="flex items-center justify-center bg-gray-50 border border-gray-300 rounded-lg p-3 w-full min-h-[60px]">
+                    {captchaCode ? (
+                      <span className="text-lg font-mono font-bold text-gray-800">{captchaCode}</span>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        <span className="text-gray-500">Loading security code...</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
@@ -426,9 +465,15 @@ const Contact = () => {
                       formErrors.captcha ? 'border-red-500' : 'border-gray-300'
                     }`}
                     maxLength={6}
+                    disabled={!captchaCode || isSubmitting}
                   />
                   {formErrors.captcha && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.captcha}</p>
+                    <div className="mt-1 flex items-center space-x-2">
+                      <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="text-red-500 text-sm">{formErrors.captcha}</p>
+                    </div>
                   )}
                 </div>
               </motion.div>

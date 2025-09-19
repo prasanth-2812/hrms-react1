@@ -87,7 +87,7 @@ const SendEnquiry = () => {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('http://localhost:5000/api/send-enquiry', {
+      const response = await fetch('http://125.18.84.106:5002/api/send-enquiry', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

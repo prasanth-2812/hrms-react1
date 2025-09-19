@@ -13,8 +13,69 @@ const requestDemoRoutes = require('./routes/requestDemo');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// CORS Configuration
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Get allowed origins from environment variables
+    const allowedOrigins = process.env.CORS_ORIGINS 
+      ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
+      : [
+        'https://synchrm.com',
+        'https://www.synchrm.com',
+        'http://synchrm.com',
+        'http://www.synchrm.com',
+        'http://125.18.84.106:8015',
+        'http://125.18.84.106:8080',
+        'https://125.18.84.106:8015',
+        'https://125.18.84.106:8080' // HTTPS with port
+        ];
+    
+    // Add production domains if specified
+    if (process.env.CORS_ORIGIN) {
+      allowedOrigins.push(process.env.CORS_ORIGIN);
+    }
+    
+    // Add common production patterns
+    if (process.env.NODE_ENV === 'production') {
+      allowedOrigins.push(
+        'https://synchrm.com',
+        'https://www.synchrm.com',
+        'http://synchrm.com',
+        'http://www.synchrm.com',
+        'http://125.18.84.106:8015',
+        'http://125.18.84.106:8080',
+        'https://125.18.84.106:8015',
+        'https://125.18.84.106:8080'
+      );
+    }
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // Allow cookies and authorization headers
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With',
+    'Content-Type',
+    'Accept',
+    'Authorization',
+    'Cache-Control',
+    'Pragma'
+  ],
+  exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 // Create Nodemailer transporter
@@ -52,14 +113,93 @@ app.use('/api/send-enquiry', sendEnquiryRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/request-demo', requestDemoRoutes);
 
+// Health check endpoint for Docker
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// CORS debugging endpoint
+app.get('/cors-info', (req, res) => {
+  const allowedOrigins = process.env.CORS_ORIGINS 
+    ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
+    : [
+        'http://localhost:3000',
+        'http://localhost:80',
+        'http://localhost',
+        'https://localhost',
+        'https://localhost:80',
+        'https://synchrm.com',
+        'https://www.synchrm.com',
+        'http://synchrm.com',
+        'http://www.synchrm.com',
+        'http://125.18.84.106:8015',
+        'http://125.18.84.106:8080',
+        'https://125.18.84.106:8015',
+        'https://125.18.84.106:8080'
+      ];
+  
+  if (process.env.CORS_ORIGIN) {
+    allowedOrigins.push(process.env.CORS_ORIGIN);
+  }
+  
+  res.json({
+    cors: {
+      allowedOrigins,
+      currentOrigin: req.get('Origin') || 'No origin header',
+      userAgent: req.get('User-Agent'),
+      environment: process.env.NODE_ENV || 'development',
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH']
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Test route
 app.get('/', (req, res) => {
+  const allowedOrigins = process.env.CORS_ORIGINS 
+    ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
+    : [
+        'http://localhost:3000', 
+        'http://localhost:80', 
+        'http://localhost', 
+        'https://localhost', 
+        'https://localhost:80',
+        'https://synchrm.com',
+        'https://www.synchrm.com',
+        'http://synchrm.com',
+        'http://www.synchrm.com',
+        'http://125.18.84.106:8015',
+        'http://125.18.84.106:8080',
+        'https://125.18.84.106:8015',
+        'https://125.18.84.106:8080'
+      ];
+  
+  if (process.env.CORS_ORIGIN) {
+    allowedOrigins.push(process.env.CORS_ORIGIN);
+  }
+  
   res.send(`
-    <h1>HRMS API is running</h1>
+    <h1>Sync HRMS API is running</h1>
     <p><strong>SMTP:</strong> ${process.env.EMAIL_HOST}:${process.env.EMAIL_PORT}</p>
     <p><strong>Secure (SSL):</strong> ${process.env.EMAIL_SECURE === 'true' ? 'Yes' : 'No'}</p>
     <p><strong>From:</strong> "${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_EMAIL}></p>
     <p><em>Ready to send emails (unencrypted mode for compatibility).</em></p>
+    <hr>
+    <h3>CORS Configuration</h3>
+    <p><strong>Allowed Origins:</strong></p>
+    <ul>
+      ${allowedOrigins.map(origin => `<li>${origin}</li>`).join('')}
+    </ul>
+    <p><strong>Current Origin:</strong> ${req.get('Origin') || 'No origin header'}</p>
+    <p><strong>Environment:</strong> ${process.env.NODE_ENV || 'development'}</p>
+    <hr>
+    <p><a href="/health">Health Check</a> | <a href="/cors-info">CORS Info (JSON)</a></p>
   `);
 });
 

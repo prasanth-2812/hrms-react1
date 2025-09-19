@@ -100,7 +100,7 @@ const RequestDemo = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/request-demo', {
+      const response = await fetch('http://125.18.84.106:5002/api/request-demo', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
