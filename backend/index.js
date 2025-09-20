@@ -27,10 +27,16 @@ const corsOptions = {
         'https://www.synchrm.com',
         'http://synchrm.com',
         'http://www.synchrm.com',
+        'https://api.synchrm.com',
         'http://125.18.84.106:8015',
         'http://125.18.84.106:8080',
         'https://125.18.84.106:8015',
-        'https://125.18.84.106:8080' // HTTPS with port
+        'https://125.18.84.106:8080',
+        'http://localhost:3000',
+        'http://localhost:80',
+        'http://localhost',
+        'https://localhost',
+        'https://localhost:80'
         ];
     
     // Add production domains if specified
@@ -45,6 +51,7 @@ const corsOptions = {
         'https://www.synchrm.com',
         'http://synchrm.com',
         'http://www.synchrm.com',
+        'https://api.synchrm.com',
         'http://125.18.84.106:8015',
         'http://125.18.84.106:8080',
         'https://125.18.84.106:8015',
@@ -53,9 +60,11 @@ const corsOptions = {
     }
     
     if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log('✅ CORS allowed for origin:', origin);
       callback(null, true);
     } else {
-      console.log('CORS blocked origin:', origin);
+      console.log('❌ CORS blocked origin:', origin);
+      console.log('📋 Allowed origins:', allowedOrigins);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -108,6 +117,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// Handle preflight OPTIONS requests
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.sendStatus(200);
+});
+
 // Routes
 app.use('/api/send-enquiry', sendEnquiryRoutes);
 app.use('/api/contact', contactRoutes);
@@ -137,6 +155,7 @@ app.get('/cors-info', (req, res) => {
         'https://www.synchrm.com',
         'http://synchrm.com',
         'http://www.synchrm.com',
+        'https://api.synchrm.com',
         'http://125.18.84.106:8015',
         'http://125.18.84.106:8080',
         'https://125.18.84.106:8015',
@@ -174,6 +193,7 @@ app.get('/', (req, res) => {
         'https://www.synchrm.com',
         'http://synchrm.com',
         'http://www.synchrm.com',
+        'https://api.synchrm.com',
         'http://125.18.84.106:8015',
         'http://125.18.84.106:8080',
         'https://125.18.84.106:8015',

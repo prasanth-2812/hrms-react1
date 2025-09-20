@@ -15,32 +15,63 @@ const RequestDemo = () => {
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [captchaCode, setCaptchaCode] = useState(generateCaptcha());
+  const [captchaCode, setCaptchaCode] = useState("");
+  const [captchaSessionId, setCaptchaSessionId] = useState("");
   const [captchaError, setCaptchaError] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // Generate random captcha code
-  function generateCaptcha() {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let result = "";
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+  // Fetch CAPTCHA from backend
+  const fetchCaptcha = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.synchrm.com'}/api/request-demo/captcha`);
+      const data = await response.json();
+      if (data.success) {
+        setCaptchaCode(data.captcha);
+        setCaptchaSessionId(data.sessionId);
+        setFormData(prev => ({ ...prev, captcha: "" }));
+        setCaptchaError(false);
+        setFormErrors(prev => ({ ...prev, captcha: "" }));
+      }
+    } catch (error) {
+      console.error('Error fetching CAPTCHA:', error);
+      // Fallback to client-side generation
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let result = "";
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      setCaptchaCode(result);
+      setCaptchaSessionId("fallback_" + Date.now());
     }
-    return result;
-  }
+  };
 
   const refreshCaptcha = () => {
-    setCaptchaCode(generateCaptcha());
-    setFormData(prev => ({ ...prev, captcha: "" }));
-    setCaptchaError(false);
-    setFormErrors(prev => ({ ...prev, captcha: "" }));
+    fetchCaptcha();
   };
 
   const handleCaptchaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toUpperCase();
     setFormData(prev => ({ ...prev, captcha: value }));
     setCaptchaError(false);
-    setFormErrors(prev => ({ ...prev, captcha: "" }));
+    
+    // Clear error when user starts typing
+    if (formErrors.captcha) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.captcha;
+        return newErrors;
+      });
+    }
+    
+    // Real-time validation for captcha - show error immediately when 6 characters are entered
+    if (value.length === 6) {
+      if (captchaSessionId.startsWith("fallback") && value !== captchaCode) {
+        setFormErrors(prev => ({ ...prev, captcha: "Invalid security code. Please try again." }));
+      } else if (!captchaSessionId.startsWith("fallback")) {
+        // For server-side captcha, we'll validate on submit
+        setFormErrors(prev => ({ ...prev, captcha: "" }));
+      }
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -82,8 +113,10 @@ const RequestDemo = () => {
       errors.phone = "Phone number is required";
     }
     
-    if (formData.captcha !== captchaCode) {
-      errors.captcha = "Invalid captcha";
+    if (!formData.captcha.trim()) {
+      errors.captcha = "Security verification is required";
+    } else if (captchaSessionId.startsWith("fallback") && formData.captcha !== captchaCode) {
+      errors.captcha = "Invalid security code. Please try again.";
     }
     
     setFormErrors(errors);
@@ -100,7 +133,7 @@ const RequestDemo = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('http://125.18.84.106:5002/api/request-demo', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.synchrm.com'}/api/request-demo`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -111,7 +144,9 @@ const RequestDemo = () => {
           company: formData.company,
           employees: formData.employees,
           phone: formData.phone,
-          message: formData.message
+          message: formData.message,
+          captcha: formData.captcha,
+          sessionId: captchaSessionId
         }),
       });
 
@@ -135,7 +170,19 @@ const RequestDemo = () => {
         }, 5000);
       } else {
         const result = await response.json();
-        setFormErrors({ submit: result.message || 'Failed to submit form' });
+        
+        // Handle specific field errors
+        if (result.field === 'captcha') {
+          setFormErrors({ captcha: result.message });
+          // Refresh CAPTCHA on error
+          refreshCaptcha();
+        } else if (result.field === 'email') {
+          setFormErrors({ email: result.message });
+        } else if (result.field === 'required_fields') {
+          setFormErrors({ submit: result.message });
+        } else {
+          setFormErrors({ submit: result.message || 'Failed to submit form' });
+        }
       }
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -148,6 +195,8 @@ const RequestDemo = () => {
   useEffect(() => {
     // Add smooth scroll behavior
     document.body.style.overflowY = 'auto';
+    // Fetch initial CAPTCHA
+    fetchCaptcha();
   }, []);
 
   if (isSubmitted) {
@@ -405,7 +454,8 @@ const RequestDemo = () => {
                     <button
                       type="button"
                       onClick={refreshCaptcha}
-                      className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                      disabled={isSubmitting}
+                      className="text-gray-500 hover:text-gray-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Refresh captcha"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -421,19 +471,33 @@ const RequestDemo = () => {
                   </div>
                   
                   <div>
-                    <input
+                    <motion.input
                       type="text"
                       value={formData.captcha}
                       onChange={handleCaptchaChange}
                       placeholder="ENTER THE CODE ABOVE"
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                        formErrors.captcha ? 'border-red-500' : 'border-gray-300'
+                        formErrors.captcha ? 'border-red-500 bg-red-50' : 'border-gray-300'
                       }`}
                       maxLength={6}
-                      required
+                      disabled={!captchaCode || isSubmitting}
+                      animate={formErrors.captcha ? { x: [-10, 10, -10, 10, 0] } : {}}
+                      transition={{ duration: 0.5 }}
                     />
                     {formErrors.captcha && (
-                      <p className="text-red-500 text-sm mt-1">{formErrors.captcha}</p>
+                      <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-2 flex items-center space-x-2 bg-red-50 border border-red-200 rounded-lg p-3"
+                      >
+                        <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                          <p className="text-red-700 text-sm font-medium">{formErrors.captcha}</p>
+                          <p className="text-red-600 text-xs mt-1">Click the refresh button to get a new code</p>
+                        </div>
+                      </motion.div>
                     )}
                   </div>
                 </motion.div>

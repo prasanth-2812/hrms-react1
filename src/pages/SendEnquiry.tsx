@@ -3,132 +3,205 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const SendEnquiry = () => {
-  const [captchaCode, setCaptchaCode] = useState("TWPTG4");
-  const [userInput, setUserInput] = useState("");
-  const [isCaptchaValid, setIsCaptchaValid] = useState(true);
-  const [showError, setShowError] = useState(false);
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    companyName: "",
+    employeeCount: "",
+    name: "",
+    email: "",
+    contactNumber: "",
+    sector: "",
+    captcha: "",
+  });
+
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [captchaCode, setCaptchaCode] = useState("");
+  const [captchaSessionId, setCaptchaSessionId] = useState("");
+  const [captchaError, setCaptchaError] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [formKey, setFormKey] = useState(0); // Add form key for reset
 
-  // Generate random captcha code
-  const generateCaptcha = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let result = "";
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+  // Fetch CAPTCHA from backend
+  const fetchCaptcha = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.synchrm.com'}/api/send-enquiry/captcha`);
+      const data = await response.json();
+      if (data.success) {
+        setCaptchaCode(data.captcha);
+        setCaptchaSessionId(data.sessionId);
+        setFormData(prev => ({ ...prev, captcha: "" }));
+        setCaptchaError(false);
+        setFormErrors(prev => ({ ...prev, captcha: "" }));
+      }
+    } catch (error) {
+      console.error('Error fetching CAPTCHA:', error);
+      // Fallback to client-side generation
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let result = "";
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      setCaptchaCode(result);
+      setCaptchaSessionId("fallback_" + Date.now());
     }
-    setCaptchaCode(result);
-    setUserInput("");
-    setIsCaptchaValid(true);
-    setShowError(false);
-    setFormErrors({});
   };
 
-  // Format input to uppercase only
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const refreshCaptcha = () => {
+    fetchCaptcha();
+  };
+
+  const handleCaptchaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toUpperCase();
-    setUserInput(value);
+    setFormData(prev => ({ ...prev, captcha: value }));
+    setCaptchaError(false);
     
-    // Validate as user types
-    if (value.length === 6 && value !== captchaCode) {
-      setIsCaptchaValid(false);
-    } else {
-      setIsCaptchaValid(true);
+    // Clear error when user starts typing
+    if (formErrors.captcha) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.captcha;
+        return newErrors;
+      });
     }
+    
+    // Real-time validation for captcha - show error immediately when 6 characters are entered
+    if (value.length === 6) {
+      if (captchaSessionId.startsWith("fallback") && value !== captchaCode) {
+        setFormErrors(prev => ({ ...prev, captcha: "Invalid security code. Please try again." }));
+      } else if (!captchaSessionId.startsWith("fallback")) {
+        // For server-side captcha, we'll validate on submit
+        setFormErrors(prev => ({ ...prev, captcha: "" }));
+      }
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    if (!formData.companyName.trim()) {
+      errors.companyName = "Company name is required";
+    }
+    
+    if (!formData.employeeCount.trim()) {
+      errors.employeeCount = "Employee count is required";
+    }
+    
+    if (!formData.name.trim()) {
+      errors.name = "Name is required";
+    }
+    
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Email is invalid";
+    }
+    
+    if (!formData.contactNumber.trim()) {
+      errors.contactNumber = "Contact number is required";
+    }
+    
+    if (!formData.sector.trim()) {
+      errors.sector = "Sector is required";
+    }
+    
+    if (!formData.captcha.trim()) {
+      errors.captcha = "Security verification is required";
+    } else if (captchaSessionId.startsWith("fallback") && formData.captcha !== captchaCode) {
+      errors.captcha = "Invalid security code. Please try again.";
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Validate form fields
-    const errors: Record<string, string> = {};
-    const formData = new FormData(e.currentTarget);
-    
-    if (!formData.get('companyName')) {
-      errors.companyName = "Company name is required";
-    }
-    
-    if (!formData.get('employeeCount')) {
-      errors.employeeCount = "Employee count is required";
-    }
-    
-    if (!formData.get('name')) {
-      errors.name = "Name is required";
-    }
-    
-    if (!formData.get('email')) {
-      errors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.get('email') as string)) {
-      errors.email = "Email is invalid";
-    }
-    
-    if (!formData.get('contactNumber')) {
-      errors.contactNumber = "Contact number is required";
-    }
-    
-    if (!formData.get('sector')) {
-      errors.sector = "Sector is required";
-    }
-    
-    if (!userInput || userInput !== captchaCode) {
-      setShowError(true);
-      errors.captcha = "Invalid captcha";
-    }
-    
-    setFormErrors(errors);
-    
-    if (Object.keys(errors).length > 0) {
+    if (!validateForm()) {
       return;
     }
     
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('http://125.18.84.106:5002/api/send-enquiry', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.synchrm.com'}/api/send-enquiry`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: formData.get('name'),
-          email: formData.get('email'),
-          company: formData.get('companyName'),
-          sector: formData.get('sector'),
-          message: `Employee Count: ${formData.get('employeeCount')}, Contact: ${formData.get('contactNumber')}`
+          name: formData.name,
+          email: formData.email,
+          company: formData.companyName,
+          sector: formData.sector,
+          message: `Employee Count: ${formData.employeeCount}, Contact: ${formData.contactNumber}`,
+          captcha: formData.captcha,
+          sessionId: captchaSessionId
         }),
       });
 
       if (response.ok) {
-        // Show success state
         setIsSubmitted(true);
-        
         // Reset form
-        setFormKey(prev => prev + 1);
-        generateCaptcha();
+        setFormData({
+          companyName: "",
+          employeeCount: "",
+          name: "",
+          email: "",
+          contactNumber: "",
+          sector: "",
+          captcha: "",
+        });
+        refreshCaptcha();
         
         // Reset after 5 seconds
         setTimeout(() => {
           setIsSubmitted(false);
         }, 5000);
       } else {
-        // Handle server error
         const result = await response.json();
-        setFormErrors({ submit: result.message || "There was an error submitting your form. Please try again." });
+        
+        // Handle specific field errors
+        if (result.field === 'captcha') {
+          setFormErrors({ captcha: result.message });
+          // Refresh CAPTCHA on error
+          refreshCaptcha();
+        } else if (result.field === 'email') {
+          setFormErrors({ email: result.message });
+        } else if (result.field === 'required_fields') {
+          setFormErrors({ submit: result.message });
+        } else {
+          setFormErrors({ submit: result.message || 'Failed to submit form' });
+        }
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      setFormErrors({ submit: "Network error. Please check your connection and try again." });
+      setFormErrors({ submit: 'Network error. Please check your connection and try again.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Generate new captcha on component mount
   useEffect(() => {
-    generateCaptcha();
+    // Add smooth scroll behavior
+    document.body.style.overflowY = 'auto';
+    // Fetch initial CAPTCHA
+    fetchCaptcha();
   }, []);
 
   if (isSubmitted) {
@@ -226,7 +299,8 @@ const SendEnquiry = () => {
                     type="text"
                     id="companyName"
                     name="companyName"
-                    required
+                    value={formData.companyName}
+                    onChange={handleChange}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                       formErrors.companyName ? 'border-red-500' : 'border-gray-300'
                     }`}
@@ -250,7 +324,8 @@ const SendEnquiry = () => {
                     <select
                       id="employeeCount"
                       name="employeeCount"
-                      required
+                      value={formData.employeeCount}
+                      onChange={handleChange}
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                         formErrors.employeeCount ? 'border-red-500' : 'border-gray-300'
                       }`}
@@ -280,7 +355,8 @@ const SendEnquiry = () => {
                       type="text"
                       id="name"
                       name="name"
-                      required
+                      value={formData.name}
+                      onChange={handleChange}
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                         formErrors.name ? 'border-red-500' : 'border-gray-300'
                       }`}
@@ -305,7 +381,8 @@ const SendEnquiry = () => {
                     type="email"
                     id="email"
                     name="email"
-                    required
+                    value={formData.email}
+                    onChange={handleChange}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                       formErrors.email ? 'border-red-500' : 'border-gray-300'
                     }`}
@@ -330,7 +407,8 @@ const SendEnquiry = () => {
                       type="tel"
                       id="contactNumber"
                       name="contactNumber"
-                      required
+                      value={formData.contactNumber}
+                      onChange={handleChange}
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                         formErrors.contactNumber ? 'border-red-500' : 'border-gray-300'
                       }`}
@@ -352,7 +430,8 @@ const SendEnquiry = () => {
                       type="text"
                       id="sector"
                       name="sector"
-                      required
+                      value={formData.sector}
+                      onChange={handleChange}
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                         formErrors.sector ? 'border-red-500' : 'border-gray-300'
                       }`}
@@ -375,8 +454,9 @@ const SendEnquiry = () => {
                     <label className="text-sm font-medium text-gray-700">Security Verification</label>
                     <button
                       type="button"
-                      onClick={generateCaptcha}
-                      className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                      onClick={refreshCaptcha}
+                      disabled={isSubmitting}
+                      className="text-gray-500 hover:text-gray-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Refresh captcha"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -392,18 +472,36 @@ const SendEnquiry = () => {
                   </div>
                   
                   <div>
-                    <input
+                    <motion.input
                       type="text"
-                      value={userInput}
-                      onChange={handleInputChange}
+                      value={formData.captcha}
+                      onChange={handleCaptchaChange}
+                      name="captcha"
                       placeholder="ENTER THE CODE ABOVE"
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                        showError ? 'border-red-500' : 'border-gray-300'
+                        formErrors.captcha ? 'border-red-500 bg-red-50' : 'border-gray-300'
                       }`}
                       maxLength={6}
+                      disabled={!captchaCode || isSubmitting}
+                      animate={formErrors.captcha ? { x: [-10, 10, -10, 10, 0] } : {}}
+                      transition={{ duration: 0.5 }}
                     />
-                    {showError && (
-                      <p className="text-red-500 text-sm mt-1">Invalid code. Please try again.</p>
+                    {formErrors.captcha && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-2 flex items-center space-x-2 bg-red-50 border border-red-200 rounded-lg p-3"
+                      >
+                        <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                        <p className="text-red-700 text-sm font-medium">
+                          {formErrors.captcha}
+                        </p>
+                          <p className="text-red-600 text-xs mt-1">Click the refresh button to get a new code</p>
+                        </div>
+                      </motion.div>
                     )}
                   </div>
                 </motion.div>
@@ -422,10 +520,14 @@ const SendEnquiry = () => {
                 {/* Submit Button */}
                 <motion.button
                   type="submit"
-                  disabled={isSubmitting || !isCaptchaValid || userInput.length !== 6}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-lg font-semibold text-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
+                  disabled={isSubmitting}
+                  whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
+                  whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
+                  className={`w-full py-4 rounded-lg font-semibold text-lg transition-all duration-300 ${
+                    isSubmitting
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-70' 
+                      : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-xl hover:scale-105'
+                  }`}
                 >
                   {isSubmitting ? "Sending..." : "Send Enquiry"}
                 </motion.button>
