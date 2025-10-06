@@ -1,5 +1,6 @@
 // src/components/home/Contact.tsx
 import { useState, useEffect } from "react";
+import API_CONFIG from "../config/api";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Contact = () => {
@@ -22,7 +23,7 @@ const Contact = () => {
   // Fetch CAPTCHA from backend
   const fetchCaptcha = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.synchrm.com'}/api/contact/captcha`);
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CONTACT_CAPTCHA}`);
       const data = await response.json();
       if (data.success) {
         setCaptchaCode(data.captcha);
@@ -133,7 +134,7 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.synchrm.com'}/api/contact`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CONTACT}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -11,7 +11,7 @@ const contactRoutes = require('./routes/contact');
 const requestDemoRoutes = require('./routes/requestDemo');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3001;
 
 // CORS Configuration
 const corsOptions = {
@@ -33,10 +33,13 @@ const corsOptions = {
         'https://125.18.84.106:8015',
         'https://125.18.84.106:8080',
         'http://localhost:3000',
+        'http://localhost:3001',
         'http://localhost:80',
         'http://localhost',
         'https://localhost',
-        'https://localhost:80'
+        'https://localhost:80',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:3001'
         ];
     
     // Add production domains if specified

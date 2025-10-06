@@ -1,6 +1,7 @@
 // src/components/home/Hero.tsx
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import API_CONFIG from "../../config/api";
 
 const Hero: React.FC = () => {
   const [captchaCode, setCaptchaCode] = useState("TWPTG4");
@@ -121,7 +122,7 @@ const Hero: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.synchrm.com'}/api/send-enquiry`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SEND_ENQUIRY}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

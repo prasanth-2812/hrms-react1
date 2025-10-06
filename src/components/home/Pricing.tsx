@@ -59,18 +59,22 @@ const Pricing: React.FC = () => {
     }
   };
 
-  // Function to convert price to INR format
+  // Function to format price for per-user pricing
   const formatPriceInINR = (price: string, isAnnual: boolean) => {
-    // Extract numeric value from price string (removing $ and other chars)
+    // Extract numeric value from price string (removing ₹ and other chars)
     const numericPrice = parseFloat(price.replace(/[^0-9.]/g, ''));
+    
+    if (price === "Custom") {
+      return "Custom";
+    }
     
     if (isAnnual) {
       // For annual pricing, calculate yearly price with 20% discount
       const yearlyPrice = Math.round(numericPrice * 0.8 * 12);
-      return `₹${yearlyPrice}/yr`;
+      return `₹${yearlyPrice}/user/yr`;
     } else {
-      // For monthly, just format with ₹ symbol
-      return `₹${numericPrice}/mo`;
+      // For monthly, format with per-user pricing
+      return `₹${numericPrice}/user/mo`;
     }
   };
 
@@ -87,10 +91,10 @@ const Pricing: React.FC = () => {
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Simple, Transparent{" "}
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Pricing
+                Per-User Pricing
               </span>
             </h2>
-            <p className="text-xl text-gray-600 mb-8">Choose the perfect plan for your business needs</p>
+            <p className="text-xl text-gray-600 mb-8">Pay only for what you use - scale as your team grows</p>
             
             {/* Toggle for monthly/annual pricing */}
             <div className="flex justify-center items-center mb-12">
@@ -125,7 +129,7 @@ const Pricing: React.FC = () => {
           {pricingPlans.map((plan: Plan, index) => {
             // Adjust price based on monthly/annual toggle
             const displayPrice = formatPriceInINR(plan.price, !isMonthly);
-            const originalMonthlyPrice = parseFloat(plan.price.replace(/[^0-9.]/g, ''));
+            const originalMonthlyPrice = plan.price === "Custom" ? 0 : parseFloat(plan.price.replace(/[^0-9.]/g, ''));
             const originalYearlyPrice = originalMonthlyPrice * 12;
             
             return (
@@ -173,9 +177,14 @@ const Pricing: React.FC = () => {
                     transition={{ delay: 0.4 }}
                   >
                     <span className="text-5xl font-bold text-blue-600">{displayPrice}</span>
-                    {!isMonthly && plan.price !== '$0' && (
+                    {!isMonthly && plan.price !== "Custom" && originalMonthlyPrice > 0 && (
                       <div className="text-sm text-gray-500 mt-1">
-                        <span className="line-through">₹{originalYearlyPrice}/yr</span>
+                        <span className="line-through">₹{originalYearlyPrice}/user/yr</span>
+                      </div>
+                    )}
+                    {plan.price !== "Custom" && (
+                      <div className="text-sm text-gray-600 mt-2">
+                        Per user pricing - scale as you grow
                       </div>
                     )}
                   </motion.div>

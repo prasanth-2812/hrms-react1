@@ -54,28 +54,30 @@ export const advancedFeatures: Feature[] = [
 export const pricingPlans = [
   {
     name: "Starter",
-    price: "₹299",
-    period: "/month",
+    price: "₹10",
+    period: "/user/month",
     features: [
-      "Up to 50 employees",
       "Basic HR & Payroll",
       "Attendance Management",
       "Leave Management",
-      "Email Support"
+      "Employee Self-Service",
+      "Email Support",
+      "Basic Reporting"
     ],
     popular: false
   },
   {
     name: "Professional",
-    price: "₹799",
-    period: "/month",
+    price: "₹20",
+    period: "/user/month",
     features: [
-      "Up to 200 employees",
       "All Starter features",
       "AI-Powered Recruitment",
       "Performance Management",
+      "Advanced Analytics",
       "24/7 Priority Support",
-      "Advanced Analytics"
+      "Multi-location Support",
+      "Custom Workflows"
     ],
     popular: true
   },
@@ -84,13 +86,14 @@ export const pricingPlans = [
     price: "Custom",
     period: "",
     features: [
-      "Unlimited employees",
       "All Professional features",
       "Private LLM Integration",
       "Face Recognition",
       "Geo-Fencing",
+      "Advanced Security",
       "Dedicated Account Manager",
-      "Custom Development"
+      "Custom Development",
+      "On-premise Deployment"
     ],
     popular: false
   }

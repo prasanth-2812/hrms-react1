@@ -2,9 +2,75 @@
 const express = require('express');
 const router = express.Router();
 
+// In-memory storage for CAPTCHA codes (in production, use Redis or database)
+const captchaStorage = new Map();
+
+// Helper function to generate CAPTCHA code
+function generateCaptchaCode() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+// Helper function to clean expired CAPTCHAs
+function cleanExpiredCaptchas() {
+  const now = Date.now();
+  for (const [key, value] of captchaStorage.entries()) {
+    if (now - value.timestamp > 300000) { // 5 minutes
+      captchaStorage.delete(key);
+    }
+  }
+}
+
+// Route to generate CAPTCHA
+router.get('/captcha', (req, res) => {
+  const captchaCode = generateCaptchaCode();
+  const sessionId = req.ip + '_' + Date.now(); // Simple session ID
+  
+  // Store CAPTCHA with timestamp
+  captchaStorage.set(sessionId, {
+    code: captchaCode,
+    timestamp: Date.now()
+  });
+  
+  // Clean expired CAPTCHAs
+  cleanExpiredCaptchas();
+  
+  res.json({
+    success: true,
+    captcha: captchaCode,
+    sessionId: sessionId
+  });
+});
+
+// Helper function to validate CAPTCHA
+function validateCaptcha(sessionId, userInput) {
+  const stored = captchaStorage.get(sessionId);
+  if (!stored) {
+    return { valid: false, message: 'CAPTCHA session expired. Please refresh and try again.' };
+  }
+  
+  const now = Date.now();
+  if (now - stored.timestamp > 300000) { // 5 minutes
+    captchaStorage.delete(sessionId);
+    return { valid: false, message: 'CAPTCHA expired. Please refresh and try again.' };
+  }
+  
+  if (stored.code.toUpperCase() !== userInput.toUpperCase()) {
+    return { valid: false, message: 'Invalid CAPTCHA code. Please try again.' };
+  }
+  
+  // Remove used CAPTCHA
+  captchaStorage.delete(sessionId);
+  return { valid: true, message: 'CAPTCHA validated successfully.' };
+}
+
 router.post('/', async (req, res) => {
   try {
-    const { name, email, company, employees, phone, message } = req.body;
+    const { name, email, company, employees, phone, message, captcha, sessionId } = req.body;
 
     // Validate required fields
     if (!name || !email || !company || !employees || !phone) {
@@ -20,6 +86,25 @@ router.post('/', async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Please provide a valid email address',
+      });
+    }
+
+    // Validate CAPTCHA
+    if (!captcha || !sessionId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Security verification is required',
+        field: 'captcha'
+      });
+    }
+
+    // Validate CAPTCHA code
+    const captchaValidation = validateCaptcha(sessionId, captcha);
+    if (!captchaValidation.valid) {
+      return res.status(400).json({
+        success: false,
+        message: captchaValidation.message,
+        field: 'captcha'
       });
     }
 

@@ -1,5 +1,6 @@
 // src/pages/RequestDemo.tsx
 import { useState, useEffect } from "react";
+import API_CONFIG from "../config/api";
 import { motion, AnimatePresence } from "framer-motion";
 
 const RequestDemo = () => {
@@ -23,7 +24,7 @@ const RequestDemo = () => {
   // Fetch CAPTCHA from backend
   const fetchCaptcha = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.synchrm.com'}/api/request-demo/captcha`);
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REQUEST_DEMO_CAPTCHA}`);
       const data = await response.json();
       if (data.success) {
         setCaptchaCode(data.captcha);
@@ -133,7 +134,7 @@ const RequestDemo = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.synchrm.com'}/api/request-demo`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REQUEST_DEMO}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
