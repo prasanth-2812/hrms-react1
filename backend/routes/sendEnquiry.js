@@ -1,6 +1,7 @@
 // backend/routes/sendEnquiry.js
 const express = require('express');
 const router = express.Router();
+const { sendMultipleEmails } = require('../services/emailService');
 
 router.post('/', async (req, res) => {
   try {
@@ -28,7 +29,6 @@ router.post('/', async (req, res) => {
 
     // Email to business owner
     const ownerMailOptions = {
-      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_EMAIL}>`,
       to: process.env.OWNER_EMAIL,
       subject: `New Enquiry from ${name} at ${company}`,
       html: `
@@ -161,7 +161,6 @@ router.post('/', async (req, res) => {
 
     // Email to customer (confirmation)
     const customerMailOptions = {
-      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_EMAIL}>`,
       to: email,
       subject: 'Thank you for your enquiry - Sync HRM',
       html: `
@@ -295,11 +294,8 @@ router.post('/', async (req, res) => {
       `,
     };
 
-    // Send both emails
-    await Promise.all([
-      req.transporter.sendMail(ownerMailOptions),
-      req.transporter.sendMail(customerMailOptions)
-    ]);
+    // Send both emails using the new email service with enquiry form type
+    await sendMultipleEmails(req.transporter, 'enquiry', [ownerMailOptions, customerMailOptions]);
 
     res.status(200).json({ 
       success: true,

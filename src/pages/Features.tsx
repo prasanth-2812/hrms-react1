@@ -12,7 +12,6 @@ import {
   CheckCircle, 
   DoorOpen, 
   TrendingUp, 
-  CreditCard,
   Flag,
   ClipboardCheck,
   RefreshCw,
@@ -94,12 +93,6 @@ const featureList = [
     title: "Performance Management",
     icon: <TrendingUp className="w-10 h-10 text-blue-600" />,
     description: "OKR tracking, 360 feedback, and review cycles"
-  },
-  {
-    id: "payroll",
-    title: "Payroll",
-    icon: <CreditCard className="w-10 h-10 text-blue-600" />,
-    description: "Seamless salary processing with tax and compliance integration"
   },
   {
     id: "activity-report-logging",

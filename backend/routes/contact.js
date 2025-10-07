@@ -1,6 +1,7 @@
 // backend/routes/contact.js
 const express = require('express');
 const router = express.Router();
+const { sendMultipleEmails } = require('../services/emailService');
 
 // In-memory storage for CAPTCHA codes (in production, use Redis or database)
 const captchaStorage = new Map();
@@ -117,7 +118,6 @@ router.post('/', async (req, res) => {
 
     // Email to business owner
     const ownerMailOptions = {
-      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_EMAIL}>`,
       to: process.env.OWNER_EMAIL || process.env.EMAIL_FROM_EMAIL,
       subject: `Contact Form Submission from ${fullName}`,
       html: `
@@ -246,7 +246,6 @@ router.post('/', async (req, res) => {
 
     // Email to customer (confirmation)
     const customerMailOptions = {
-      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_EMAIL}>`,
       to: email,
       subject: 'Thank you for contacting us - Sync HRM',
       html: `
@@ -380,11 +379,8 @@ router.post('/', async (req, res) => {
       `,
     };
 
-    // Send both emails
-    await Promise.all([
-      req.transporter.sendMail(ownerMailOptions),
-      req.transporter.sendMail(customerMailOptions),
-    ]);
+    // Send both emails using the new email service with contact form type
+    await sendMultipleEmails(req.transporter, 'contact', [ownerMailOptions, customerMailOptions]);
 
     res.status(200).json({
       success: true,
